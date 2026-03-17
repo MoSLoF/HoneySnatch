@@ -1,0 +1,75 @@
+# FlyingHoneySnitch — Linux System Package Requirements
+# These are apt/dpkg packages required on the host OS.
+# They are NOT installed by pip — use the commands below.
+#
+# FULL INSTALL (all modules):
+#   sudo apt update
+#   sudo apt install $(grep -v '^#' requirements-linux.txt | grep -v '^$' | awk '{print $1}' | tr '\n' ' ')
+#
+# Or manually pick the groups you need.
+
+# ---------------------------------------------------------------------------
+# [core]  Required for 802.11 scanning and CLI operation
+# ---------------------------------------------------------------------------
+iw                    # Wireless interface management (iw dev, iw set channel)
+rfkill                # Unblock wifi radio (rfkill unblock wifi)
+wireless-tools        # iwconfig, iwlist (legacy compat)
+net-tools             # ifconfig (used by libwifi/wifi.py for MAC changes)
+aircrack-ng           # airmon-ng, aireplay-ng (monitor mode setup helper)
+
+# ---------------------------------------------------------------------------
+# [isolation]  Required for AirSnitch client isolation testing
+# ---------------------------------------------------------------------------
+libnl-3-dev           # netlink library (hostap build dep)
+libnl-genl-3-dev      # netlink generic (hostap build dep)
+libnl-route-3-dev     # netlink route (hostap build dep)
+libssl-dev            # OpenSSL (hostap build dep)
+libdbus-1-dev         # D-Bus (hostap build dep)
+pkg-config            # Build helper
+build-essential       # gcc, make, etc.
+macchanger            # MAC address spoofing (port-steal attacks)
+dnsmasq               # DHCP server for hostapd AP mode
+tcpdump               # Packet capture fallback (used by AirSnitch start_capture)
+
+# ---------------------------------------------------------------------------
+# [cellular]  Required for CellGuard SDR scanning
+# ---------------------------------------------------------------------------
+gr-gsm                # GSM scanner (grgsm_scanner) — RTL-SDR backend
+rtl-sdr               # RTL-SDR userspace driver
+srsran                # srsRAN LTE/5G tools (cell_search, nr_cell_search)
+hackrf                # HackRF userspace driver
+kalibrate-rtl         # GSM frequency calibration fallback (kal)
+modemmanager          # mmcli ModemManager (5G NR passive fallback)
+
+# ---------------------------------------------------------------------------
+# [bluetooth]  Required for BlueScout Ubertooth scanning
+# ---------------------------------------------------------------------------
+bluetooth             # BlueZ Bluetooth stack
+libbluetooth-dev      # PyBluez build dependency
+ubertooth             # Ubertooth firmware flash and usb driver
+
+# ---------------------------------------------------------------------------
+# [gps]  Required for GPS positioning
+# ---------------------------------------------------------------------------
+gpsd                  # GPS daemon
+gpsd-clients          # gpsmon, cgps
+
+# ---------------------------------------------------------------------------
+# [imu]  Required for serial IMU sensor (BadgerTrack)
+# ---------------------------------------------------------------------------
+# (pyserial handles serial access directly; no apt package needed beyond
+#  udev rules for /dev/ttyUSB0 access)
+
+# ---------------------------------------------------------------------------
+# [encrypted_db]  Required for SQLCipher database encryption
+# ---------------------------------------------------------------------------
+libsqlcipher-dev      # SQLCipher development library
+
+# ---------------------------------------------------------------------------
+# [misc]  Useful for development and debugging
+# ---------------------------------------------------------------------------
+capsh                 # Linux capability introspection (permissions check)
+tcpreplay             # Packet replay (isolation test setup)
+git                   # Version control
+python3-venv          # Python virtual environments
+python3-dev           # Python headers (for native extensions)

@@ -1,0 +1,62 @@
+# FlyingHoneySnitch — Optional Hardware & Feature Requirements
+# Install only the groups you need.
+#
+# Full install:
+#   pip install -r requirements.txt -r requirements-optional.txt
+#
+# Individual groups:
+#   pip install <package>   (copy the relevant line below)
+
+# ---------------------------------------------------------------------------
+# [gui]  Desktop GUI — PyQt6 tabbed interface  [gui/]
+# ---------------------------------------------------------------------------
+PyQt6>=6.6.0
+PyQt6-WebEngine>=6.6.0
+
+# ---------------------------------------------------------------------------
+# [gps]  GPS positioning via gpsd  [positioning/gps.py]
+# ---------------------------------------------------------------------------
+gpsd-py3>=0.3.0
+
+# ---------------------------------------------------------------------------
+# [bluetooth]  Passive Bluetooth/BLE scanning
+#
+#   pyubertooth — Ubertooth One Python bindings  [bluetooth/scanner.py]
+#   PyBluez     — HCI fallback for Classic BT    [bluetooth/scanner.py]
+#
+# NOTE: PyBluez build requires: sudo apt install libbluetooth-dev
+#       pyubertooth requires: firmware-loaded Ubertooth One on /dev/ubertooth0
+# ---------------------------------------------------------------------------
+pyubertooth>=0.2
+PyBluez>=0.23
+
+# ---------------------------------------------------------------------------
+# [cellular]  SDR-based cellular scanning
+#
+#   python-hackrf — HackRF One Python bindings  [cellular/scanner.py]
+#
+# NOTE: Also requires system packages:
+#   sudo apt install gr-gsm rtl-sdr srsran hackrf
+#   gr-gsm provides: grgsm_scanner  (GSM)
+#   srsran provides: cell_search, nr_cell_search  (LTE / 5G NR)
+# ---------------------------------------------------------------------------
+python-hackrf>=1.0
+
+# ---------------------------------------------------------------------------
+# [imu]  Serial IMU sensor for indoor positioning  [positioning/imu.py]
+# ---------------------------------------------------------------------------
+pyserial>=3.5
+
+# ---------------------------------------------------------------------------
+# [encrypted_db]  SQLCipher transparent database encryption  [db/database.py]
+#
+# NOTE: Requires libsqlcipher-dev:
+#   sudo apt install libsqlcipher-dev
+#   pip install sqlcipher3
+# ---------------------------------------------------------------------------
+sqlcipher3>=0.5.0
+
+# ---------------------------------------------------------------------------
+# [matplotlib]  Optional plotting for analysis reports  [analysis/]
+# ---------------------------------------------------------------------------
+matplotlib>=3.8.0

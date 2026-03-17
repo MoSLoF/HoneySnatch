@@ -47,16 +47,19 @@ class Supplicant(Daemon):
     def start_and_connect(self) -> ClientInfo:
         """Start wpa_supplicant and connect to the configured network.
 
-        Returns:
-            ClientInfo with connection details
+        Returns
+        -------
+        ClientInfo with connection details including MAC, IP, BSSID,
+        SSID, and GTK (if extractable).
         """
         self.start()
         self._wait_for_connection()
+        self._extract_mac()
         self._extract_keys()
         return self.client_info
 
     def _wait_for_connection(self, timeout: float = 30) -> None:
-        """Wait for the supplicant to connect."""
+        """Wait for wpa_supplicant to report CTRL-EVENT-CONNECTED."""
         if self.wait_event("CTRL-EVENT-CONNECTED", timeout=timeout):
             self.connected = True
             self._update_status()
@@ -68,8 +71,21 @@ class Supplicant(Daemon):
                 "Check the configuration file and network availability."
             )
 
+    def _extract_mac(self) -> None:
+        """Read the hardware MAC address for this interface."""
+        try:
+            # Try scapy first
+            import scapy.arch
+            self.client_info.mac = scapy.arch.get_if_hwaddr(self.iface)
+        except Exception:
+            try:
+                with open(f"/sys/class/net/{self.iface}/address") as f:
+                    self.client_info.mac = f.read().strip()
+            except Exception:
+                pass
+
     def _update_status(self) -> None:
-        """Update client info from wpa_supplicant status."""
+        """Populate ClientInfo from wpa_supplicant STATUS output."""
         status = self.wpaspy_command("STATUS")
         if status is None:
             return
@@ -77,6 +93,8 @@ class Supplicant(Daemon):
         for line in status.split("\n"):
             if "=" in line:
                 key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip()
                 if key == "bssid":
                     self.client_info.bssid = value
                 elif key == "ssid":
@@ -85,32 +103,38 @@ class Supplicant(Daemon):
                     self.client_info.key_mgmt = value
                 elif key == "ip_address":
                     self.client_info.ip = value
+                elif key == "address":
+                    # wpa_supplicant also reports the iface MAC here
+                    if not self.client_info.mac:
+                        self.client_info.mac = value
+                elif key == "identity":
+                    self.client_info.identity = value
 
     def _extract_keys(self) -> None:
-        """Extract encryption keys from wpa_supplicant."""
+        """Extract GTK from wpa_supplicant via GET_GTK command."""
         try:
-            gtk_response = self.wpaspy_command("GET_GTK")
+            gtk_response = self.wpaspy_command("GET_GTK", can_fail=True)
             if gtk_response:
                 parts = gtk_response.split()
                 if len(parts) >= 2:
                     self.client_info.gtk = bytes.fromhex(parts[0])
                     self.client_info.gtk_idx = int(parts[1])
-        except (IsolationDaemonError, ValueError) as e:
-            log(WARNING, f"Could not extract GTK: {e}")
+        except (IsolationDaemonError, ValueError) as exc:
+            log(WARNING, f"Could not extract GTK: {exc}")
 
     def get_gtk(self) -> tuple[bytes, int]:
-        """Get the current GTK and its index."""
+        """Return the current GTK and its key index."""
         return self.client_info.gtk, self.client_info.gtk_idx
 
     def get_ip(self) -> str:
-        """Get the client's IP address."""
+        """Return the client's assigned IP address."""
         return self.client_info.ip
 
     def scan(self) -> str:
         """Trigger a scan and return results."""
         self.wpaspy_command("SCAN")
         self.wait_event("CTRL-EVENT-SCAN-RESULTS", timeout=10)
-        return self.wpaspy_command("SCAN_RESULTS") or ""
+        return self.wpaspy_command("SCAN_RESULTS", can_fail=True) or ""
 
     def disconnect(self) -> None:
         """Disconnect from the current network."""
@@ -118,6 +142,6 @@ class Supplicant(Daemon):
         self.connected = False
 
     def reconnect(self) -> None:
-        """Reconnect to the network."""
-        self.wpaspy_command("REASSOCIATE")
+        """Force reassociation."""
+        self.wpaspy_command("REASSOCIATE", can_fail=True)
         self._wait_for_connection()

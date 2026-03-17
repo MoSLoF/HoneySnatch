@@ -10,9 +10,14 @@ readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [
-    {name = "FlyingHoneySnitch Team"},
+    {name = "HoneyBadger Vanguard LLC"},
 ]
-keywords = ["wireless", "security", "wardriving", "802.11", "wifi", "bluetooth", "cellular", "sdr", "assessment", "client-isolation", "airsnitch"]
+keywords = [
+    "wireless", "security", "wardriving", "802.11", "wifi",
+    "bluetooth", "ble", "cellular", "5g", "sdr",
+    "client-isolation", "airsnitch", "imsi-catcher",
+    "purple-team", "assessment",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
@@ -28,72 +33,139 @@ classifiers = [
     "Topic :: Security",
     "Topic :: System :: Networking :: Monitoring",
 ]
+
+# ---------------------------------------------------------------------------
+# Core dependencies — always installed
+# ---------------------------------------------------------------------------
 dependencies = [
+    # 802.11 packet capture / injection + BLE layer
     "scapy>=2.5.0",
+    # CLI framework
     "click>=8.1.0",
-    "sqlalchemy>=2.0.0",
-    "pyyaml>=6.0",
+    # Rich terminal output
     "rich>=13.0.0",
+    # Database ORM
+    "SQLAlchemy>=2.0.0",
+    # YAML config
+    "PyYAML>=6.0",
+    # AES-256-GCM file encryption, PBKDF2
+    "cryptography>=42.0.0",
+    # CCMP / WEP / AES key-wrap (isolation/libwifi/crypto.py)
+    "pycryptodome>=3.9.7",
+    # Interactive Folium/Leaflet maps
     "folium>=0.15.0",
-    "matplotlib>=3.8.0",
+    # Numerical / scientific (heatmaps, positioning)
     "numpy>=1.26.0",
     "scipy>=1.12.0",
-    "cryptography>=42.0.0",
-    "pycryptodome>=3.9.7",
+    # Analysis reports and plotting
+    "matplotlib>=3.8.0",
 ]
 
+# ---------------------------------------------------------------------------
+# Optional dependency groups
+# ---------------------------------------------------------------------------
 [project.optional-dependencies]
+
+# Desktop GUI (PyQt6 tabbed interface)
 gui = [
     "PyQt6>=6.6.0",
     "PyQt6-WebEngine>=6.6.0",
 ]
+
+# GPS positioning via gpsd
 gps = [
     "gpsd-py3>=0.3.0",
 ]
+
+# Passive Bluetooth / BLE scanning
+# Requires: libbluetooth-dev (for PyBluez), Ubertooth One hardware
 bluetooth = [
     "pyubertooth>=0.2",
     "PyBluez>=0.23",
 ]
+
+# SDR-based cellular scanning (GSM/LTE/5G)
+# Requires: gr-gsm, srsran, hackrf system packages
 cellular = [
     "python-hackrf>=1.0",
 ]
+
+# Serial IMU sensor for indoor positioning
+imu = [
+    "pyserial>=3.5",
+]
+
+# SQLCipher transparent database encryption
+# Requires: libsqlcipher-dev
 encrypted_db = [
     "sqlcipher3>=0.5.0",
 ]
+
+# Install everything (for development / full deployment)
 all = [
-    "flyinghoneysnitch[gui,gps,bluetooth,cellular]",
+    "flyinghoneysnitch[gui,gps,bluetooth,cellular,imu]",
 ]
+
+# Development & test tooling
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
     "pytest-asyncio>=0.23.0",
     "ruff>=0.2.0",
     "mypy>=1.8.0",
+    "types-PyYAML>=6.0.0",
+    "types-cryptography>=3.3.0",
 ]
 
+# ---------------------------------------------------------------------------
+# Entry points
+# ---------------------------------------------------------------------------
 [project.scripts]
 fhs = "flyinghoneysnitch.cli.main:cli"
 
 [project.gui-scripts]
 fhs-gui = "flyinghoneysnitch.gui.app:main"
 
+# ---------------------------------------------------------------------------
+# Project URLs
+# ---------------------------------------------------------------------------
 [project.urls]
-Homepage = "https://github.com/flyinghoneysnitch/flyinghoneysnitch"
-Documentation = "https://github.com/flyinghoneysnitch/flyinghoneysnitch/wiki"
-Repository = "https://github.com/flyinghoneysnitch/flyinghoneysnitch"
+Homepage      = "https://ihbv.io"
+Repository    = "https://github.com/MoSLoF/FlyingHoneySnitch"
+Documentation = "https://github.com/MoSLoF/FlyingHoneySnitch/wiki"
 
+# ---------------------------------------------------------------------------
+# Packaging
+# ---------------------------------------------------------------------------
 [tool.setuptools.packages.find]
 include = ["flyinghoneysnitch*"]
 
+# ---------------------------------------------------------------------------
+# pytest
+# ---------------------------------------------------------------------------
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths    = ["tests"]
 asyncio_mode = "auto"
 
+# ---------------------------------------------------------------------------
+# ruff linter
+# ---------------------------------------------------------------------------
 [tool.ruff]
 target-version = "py310"
-line-length = 100
+line-length    = 100
 
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "DTZ"]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # do not perform function calls in default arguments
+]
+
+# ---------------------------------------------------------------------------
+# mypy type checker
+# ---------------------------------------------------------------------------
 [tool.mypy]
-python_version = "3.10"
-warn_return_any = true
+python_version    = "3.10"
+warn_return_any   = true
 warn_unused_configs = true
+ignore_missing_imports = true
