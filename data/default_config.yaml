@@ -1,0 +1,91 @@
+# FlyingHoneySnitch Default Configuration
+
+scan:
+  interface: ""
+  channels_2_4: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+  channels_5:
+    - 36
+    - 40
+    - 44
+    - 48
+    - 52
+    - 56
+    - 60
+    - 64
+    - 100
+    - 104
+    - 108
+    - 112
+    - 116
+    - 120
+    - 124
+    - 128
+    - 132
+    - 136
+    - 140
+    - 144
+    - 149
+    - 153
+    - 157
+    - 161
+    - 165
+  hop_interval: 0.5
+  scan_5ghz: true
+  capture_pcap: false
+  pcap_dir: ""
+
+gps:
+  enabled: true
+  host: "127.0.0.1"
+  port: 2947
+
+bluetooth:
+  enabled: false
+  device: "/dev/ubertooth0"
+
+cellular:
+  enabled: false
+  rtlsdr_device: 0
+  hackrf_device: ""
+  scan_gsm: true
+  scan_lte: true
+  scan_5g: false
+  gsm_bands:
+    - GSM900
+    - GSM1800
+  lte_bands: [2, 4, 5, 7, 12, 13, 66, 71]
+  scan_interval: 30.0
+  baseline_file: ""
+
+monitoring:
+  alert_on_rogue_ap: true
+  alert_on_new_client: false
+  known_aps_file: ""
+  poll_interval: 5.0
+
+gui:
+  theme: "dark"
+  map_tile_server: "OpenStreetMap"
+  refresh_interval_ms: 1000
+  max_devices_displayed: 500
+
+security:
+  audit_enabled: true
+  audit_file: ""
+  encrypt_exports: false
+  encrypt_database: false
+
+data_dir: ""
+log_level: "INFO"
+oui_db_path: ""
+
+# Client isolation testing (AirSnitch)
+isolation:
+  enabled: false
+  hostap_dir: ""
+  wpa_supplicant_config: ""
+  hostapd_config: ""
+  default_server: "8.8.8.8"
+  default_port: 443
+  test_timeout: 30
+  debug_level: 0

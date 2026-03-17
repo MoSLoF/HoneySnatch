@@ -1,0 +1,99 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "flyinghoneysnitch"
+version = "0.1.0"
+description = "FlyingHoneySnitch - Wireless Discovery, Assessment & Isolation Testing Suite"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "FlyingHoneySnitch Team"},
+]
+keywords = ["wireless", "security", "wardriving", "802.11", "wifi", "bluetooth", "cellular", "sdr", "assessment", "client-isolation", "airsnitch"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: System :: Networking :: Monitoring",
+]
+dependencies = [
+    "scapy>=2.5.0",
+    "click>=8.1.0",
+    "sqlalchemy>=2.0.0",
+    "pyyaml>=6.0",
+    "rich>=13.0.0",
+    "folium>=0.15.0",
+    "matplotlib>=3.8.0",
+    "numpy>=1.26.0",
+    "scipy>=1.12.0",
+    "cryptography>=42.0.0",
+    "pycryptodome>=3.9.7",
+]
+
+[project.optional-dependencies]
+gui = [
+    "PyQt6>=6.6.0",
+    "PyQt6-WebEngine>=6.6.0",
+]
+gps = [
+    "gpsd-py3>=0.3.0",
+]
+bluetooth = [
+    "pyubertooth>=0.2",
+    "PyBluez>=0.23",
+]
+cellular = [
+    "python-hackrf>=1.0",
+]
+encrypted_db = [
+    "sqlcipher3>=0.5.0",
+]
+all = [
+    "flyinghoneysnitch[gui,gps,bluetooth,cellular]",
+]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.2.0",
+    "mypy>=1.8.0",
+]
+
+[project.scripts]
+fhs = "flyinghoneysnitch.cli.main:cli"
+
+[project.gui-scripts]
+fhs-gui = "flyinghoneysnitch.gui.app:main"
+
+[project.urls]
+Homepage = "https://github.com/flyinghoneysnitch/flyinghoneysnitch"
+Documentation = "https://github.com/flyinghoneysnitch/flyinghoneysnitch/wiki"
+Repository = "https://github.com/flyinghoneysnitch/flyinghoneysnitch"
+
+[tool.setuptools.packages.find]
+include = ["flyinghoneysnitch*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true

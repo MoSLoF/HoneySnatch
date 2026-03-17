@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# Data
+*.db
+*.pcap
+*.pcapng
+
+# Generated
+*.html
+*.kml
+*.kmz
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config (user-specific)
+.claude/
+
+# Vendor build artifacts
+*.o
+*.d
+vendor/hostap_2_*/hostapd/hostapd
+vendor/hostap_2_*/wpa_supplicant/wpa_supplicant
