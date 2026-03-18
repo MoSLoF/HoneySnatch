@@ -6,14 +6,14 @@ creating full scapy Dot11 packets is complex.
 
 import pytest
 
-from flyinghoneysnitch.core.packet_parser import (
+from honeysnatch.core.packet_parser import (
     _channel_to_band,
     _frequency_to_band,
     _frequency_to_channel,
     _parse_rates,
 )
-from flyinghoneysnitch.core.models import Band
-from flyinghoneysnitch.core.oui_lookup import _normalize_prefix
+from honeysnatch.core.models import Band
+from honeysnatch.core.oui_lookup import _normalize_prefix
 
 
 class TestFrequencyConversion:

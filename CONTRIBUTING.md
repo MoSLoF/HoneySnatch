@@ -1,4 +1,4 @@
-# Contributing to FlyingHoneySnitch
+# Contributing to honeysnatch
 
 Thank you for your interest in contributing! This document provides guidelines for
 contributing to the project.
@@ -7,8 +7,8 @@ contributing to the project.
 
 ```bash
 # Clone the repository (correct org: MoSLoF)
-git clone https://github.com/MoSLoF/FlyingHoneySnitch.git
-cd FlyingHoneySnitch
+git clone https://github.com/MoSLoF/honeysnatch.git
+cd honeysnatch
 
 # Pull vendor submodules (libwifi)
 git submodule init
@@ -33,7 +33,7 @@ python smoke_test.py
 python -m pytest tests/ -v
 
 # With coverage report
-python -m pytest tests/ --cov=flyinghoneysnitch --cov-report=term-missing
+python -m pytest tests/ --cov=honeysnatch --cov-report=term-missing
 
 # Smoke test — fast, no root, no hardware
 python smoke_test.py
@@ -50,16 +50,16 @@ We use `ruff` for linting and `mypy` for type checking:
 
 ```bash
 # Lint
-ruff check flyinghoneysnitch/
+ruff check honeysnatch/
 
 # Auto-fix lint issues
-ruff check flyinghoneysnitch/ --fix
+ruff check honeysnatch/ --fix
 
 # Format
-ruff format flyinghoneysnitch/
+ruff format honeysnatch/
 
 # Type check
-mypy flyinghoneysnitch/
+mypy honeysnatch/
 ```
 
 All PRs must pass `ruff check` with zero errors and `python smoke_test.py` with zero failures.
@@ -70,7 +70,7 @@ All PRs must pass `ruff check` with zero errors and `python smoke_test.py` with 
 2. Write tests for any new functionality
 3. Ensure all tests pass: `python -m pytest tests/ -v`
 4. Ensure smoke test passes: `python smoke_test.py`
-5. Ensure linting is clean: `ruff check flyinghoneysnitch/`
+5. Ensure linting is clean: `ruff check honeysnatch/`
 6. Update documentation if adding new features or CLI commands
 7. Submit a PR with a clear description of changes
 
@@ -104,9 +104,9 @@ All PRs must pass `ruff check` with zero errors and `python smoke_test.py` with 
 
 ## Adding a New Module
 
-1. Create the module directory under `flyinghoneysnitch/`
+1. Create the module directory under `honeysnatch/`
 2. Add a `__init__.py` with `__all__` exports
-3. Add the module to `flyinghoneysnitch/__init__.py` imports if appropriate
+3. Add the module to `honeysnatch/__init__.py` imports if appropriate
 4. Add DB schema tables to `db/schema.py` and persistence methods to `db/database.py`
 5. Add a CLI subcommand group in `cli/` and register it in `cli/main.py`
 6. Add smoke test sections to `smoke_test.py`
@@ -120,5 +120,5 @@ All PRs must pass `ruff check` with zero errors and `python smoke_test.py` with 
 
 ## Links
 
-- **Repository:** https://github.com/MoSLoF/FlyingHoneySnitch
+- **Repository:** https://github.com/MoSLoF/honeysnatch
 - **Homepage:** https://ihbv.io

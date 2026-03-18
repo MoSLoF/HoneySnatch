@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from flyinghoneysnitch.core.models import (
+from honeysnatch.core.models import (
     AccessPoint,
     Band,
     Client,

@@ -6,14 +6,14 @@ import xml.etree.ElementTree as ET
 
 import pytest
 
-from flyinghoneysnitch.core.models import (
+from honeysnatch.core.models import (
     AccessPoint,
     Band,
     Client,
     EncryptionType,
     GeoPosition,
 )
-from flyinghoneysnitch.db.database import DatabaseManager
+from honeysnatch.db.database import DatabaseManager
 
 
 @pytest.fixture
@@ -150,7 +150,7 @@ class TestKmlExport:
 class TestEncryptedExport:
 
     def test_encrypt_and_decrypt_file(self, tmp_path):
-        from flyinghoneysnitch.utils.crypto import decrypt_file, encrypt_file, is_encrypted_file
+        from honeysnatch.utils.crypto import decrypt_file, encrypt_file, is_encrypted_file
 
         plain_path = str(tmp_path / "data.json")
         enc_path = str(tmp_path / "data.json.enc")
@@ -172,7 +172,7 @@ class TestEncryptedExport:
     def test_wrong_passphrase_fails(self, tmp_path):
         from cryptography.exceptions import InvalidTag
 
-        from flyinghoneysnitch.utils.crypto import decrypt_file, encrypt_file
+        from honeysnatch.utils.crypto import decrypt_file, encrypt_file
 
         plain_path = str(tmp_path / "secret.txt")
         enc_path = str(tmp_path / "secret.enc")

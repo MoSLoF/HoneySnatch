@@ -1,5 +1,5 @@
 """Tests for isolation config integration."""
-from flyinghoneysnitch.isolation.config import IsolationConfig, find_default_config
+from honeysnatch.isolation.config import IsolationConfig, find_default_config
 
 
 def test_isolation_config_defaults():

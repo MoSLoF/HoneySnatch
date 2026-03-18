@@ -1,4 +1,4 @@
-# FlyingHoneySnitch — Development & Testing Requirements
+# honeysnatch — Development & Testing Requirements
 # Includes core + all test tooling.
 #
 # Install:

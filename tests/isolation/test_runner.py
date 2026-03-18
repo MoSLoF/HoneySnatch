@@ -1,6 +1,6 @@
 """Tests for the isolation test runner."""
-from flyinghoneysnitch.isolation.runner import IsolationTestRunner
-from flyinghoneysnitch.isolation.attacks.base import AttackOutcome
+from honeysnatch.isolation.runner import IsolationTestRunner
+from honeysnatch.isolation.attacks.base import AttackOutcome
 
 
 def test_runner_creation():

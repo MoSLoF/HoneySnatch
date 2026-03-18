@@ -2,7 +2,7 @@
 
 import pytest
 
-from flyinghoneysnitch.cellular.models import (
+from honeysnatch.cellular.models import (
     CellTower,
     CellularDevice,
     arfcn_to_freq,

@@ -1,11 +1,11 @@
 """Tests for isolation attack result factories."""
-from flyinghoneysnitch.isolation.attacks.base import AttackType, AttackOutcome
-from flyinghoneysnitch.isolation.attacks.gtk_abuse import check_gtk_shared
-from flyinghoneysnitch.isolation.attacks.broadcast_reflection import create_broadcast_reflection_result
-from flyinghoneysnitch.isolation.attacks.gateway_bounce import create_gateway_bounce_result
-from flyinghoneysnitch.isolation.attacks.port_steal import create_port_steal_result
-from flyinghoneysnitch.isolation.attacks.client2client import create_c2c_result
-from flyinghoneysnitch.isolation.attacks.client2monitor import create_c2m_result
+from honeysnatch.isolation.attacks.base import AttackType, AttackOutcome
+from honeysnatch.isolation.attacks.gtk_abuse import check_gtk_shared
+from honeysnatch.isolation.attacks.broadcast_reflection import create_broadcast_reflection_result
+from honeysnatch.isolation.attacks.gateway_bounce import create_gateway_bounce_result
+from honeysnatch.isolation.attacks.port_steal import create_port_steal_result
+from honeysnatch.isolation.attacks.client2client import create_c2c_result
+from honeysnatch.isolation.attacks.client2monitor import create_c2m_result
 
 
 def test_gtk_shared_vulnerable():

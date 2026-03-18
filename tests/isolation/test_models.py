@@ -1,6 +1,6 @@
 """Tests for isolation data models."""
-from flyinghoneysnitch.isolation.attacks.base import AttackResult, AttackType, AttackOutcome
-from flyinghoneysnitch.isolation.models import IsolationTestSession
+from honeysnatch.isolation.attacks.base import AttackResult, AttackType, AttackOutcome
+from honeysnatch.isolation.models import IsolationTestSession
 
 
 def test_attack_result_creation():

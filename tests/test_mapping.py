@@ -2,8 +2,8 @@
 
 import pytest
 
-from flyinghoneysnitch.core.models import GeoPosition
-from flyinghoneysnitch.mapping.gis import (
+from honeysnatch.core.models import GeoPosition
+from honeysnatch.mapping.gis import (
     bounding_box,
     center_point,
     haversine_distance,

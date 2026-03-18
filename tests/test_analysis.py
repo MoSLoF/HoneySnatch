@@ -2,10 +2,10 @@
 
 import pytest
 
-from flyinghoneysnitch.analysis.patterns import PatternAnalyzer, _is_randomized_mac
-from flyinghoneysnitch.analysis.profiles import ProfileEngine, PROFILE_OPEN_NETWORKS
-from flyinghoneysnitch.analysis.topology import TopologyBuilder
-from flyinghoneysnitch.core.models import AccessPoint, Client, EncryptionType, ScanSession
+from honeysnatch.analysis.patterns import PatternAnalyzer, _is_randomized_mac
+from honeysnatch.analysis.profiles import ProfileEngine, PROFILE_OPEN_NETWORKS
+from honeysnatch.analysis.topology import TopologyBuilder
+from honeysnatch.core.models import AccessPoint, Client, EncryptionType, ScanSession
 
 
 class TestPatternAnalyzer:

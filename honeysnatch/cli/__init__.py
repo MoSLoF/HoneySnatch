@@ -1,0 +1,1 @@
+"""honeysnatch CLI interface."""

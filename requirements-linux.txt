@@ -1,4 +1,4 @@
-# FlyingHoneySnitch — Linux System Package Requirements
+# honeysnatch — Linux System Package Requirements
 # These are apt/dpkg packages required on the host OS.
 # They are NOT installed by pip — use the commands below.
 #

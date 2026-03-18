@@ -1,7 +1,7 @@
 """Tests for CLI isolation subcommand registration."""
 from click.testing import CliRunner
 
-from flyinghoneysnitch.cli.main import cli
+from honeysnatch.cli.main import cli
 
 
 def test_isolation_command_exists():

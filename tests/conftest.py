@@ -1,10 +1,10 @@
-"""Shared test fixtures for FlyingHoneySnitch."""
+"""Shared test fixtures for honeysnatch."""
 
 from datetime import datetime
 
 import pytest
 
-from flyinghoneysnitch.core.models import (
+from honeysnatch.core.models import (
     AccessPoint,
     Band,
     Client,
@@ -12,7 +12,7 @@ from flyinghoneysnitch.core.models import (
     GeoPosition,
     ScanSession,
 )
-from flyinghoneysnitch.cellular.models import CellTower
+from honeysnatch.cellular.models import CellTower
 
 
 @pytest.fixture

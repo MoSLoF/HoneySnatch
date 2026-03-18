@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from flyinghoneysnitch.utils.audit import GENESIS_HASH, AuditLogger
+from honeysnatch.utils.audit import GENESIS_HASH, AuditLogger
 
 
 @pytest.fixture

@@ -1,4 +1,4 @@
-# FlyingHoneySnitch — Optional Hardware & Feature Requirements
+# honeysnatch — Optional Hardware & Feature Requirements
 # Install only the groups you need.
 #
 # Full install:

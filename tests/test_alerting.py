@@ -2,14 +2,14 @@
 
 import pytest
 
-from flyinghoneysnitch.core.models import (
+from honeysnatch.core.models import (
     AccessPoint,
     Band,
     Client,
     EncryptionType,
     ScanEvent,
 )
-from flyinghoneysnitch.monitoring.alerting import AlertEngine
+from honeysnatch.monitoring.alerting import AlertEngine
 
 
 @pytest.fixture

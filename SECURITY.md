@@ -8,7 +8,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in FlyingHoneySnitch, please report it responsibly.
+If you discover a security vulnerability in honeysnatch, please report it responsibly.
 
 **Do NOT open a public GitHub issue for security vulnerabilities.**
 
@@ -24,7 +24,7 @@ We will acknowledge receipt within 48 hours and aim to provide a fix within 7 da
 
 ## Security Design
 
-FlyingHoneySnitch handles sensitive wireless network data. Key security measures include:
+honeysnatch handles sensitive wireless network data. Key security measures include:
 
 - **Encrypted storage**: AES-256-GCM file encryption with PBKDF2-HMAC-SHA256 key derivation (600,000 iterations)
 - **Database encryption**: Optional SQLCipher transparent encryption at rest

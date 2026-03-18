@@ -1,8 +1,8 @@
-# FlyingHoneySnitch
+# honeysnatch
 
 Wireless Discovery, Assessment & Isolation Testing Suite.
 
-**FlyingHoneyBadger** (passive wireless discovery) + **AirSnitch** (active client isolation testing) = **FlyingHoneySnitch**.
+**FlyingHoneyBadger** (passive wireless discovery) + **AirSnitch** (active client isolation testing) = **honeysnatch**.
 
 > **Origin:** A cross between FlyingHoneyBadger (DoD GOTS FlyingSquirrel lineage) and
 > [AirSnitch](https://github.com/vanhoefm/airsnitch) (Mathy Vanhoef, NDSS '26).
@@ -57,8 +57,8 @@ sudo apt install libsqlcipher-dev
 ### 2. Clone the repository
 
 ```bash
-git clone https://github.com/MoSLoF/FlyingHoneySnitch.git
-cd FlyingHoneySnitch
+git clone https://github.com/MoSLoF/honeysnatch.git
+cd honeysnatch
 ```
 
 > **Note:** The repository uses Git submodules for `vendor/libwifi`.
@@ -254,8 +254,8 @@ fhs info
 ## Project Structure
 
 ```
-FlyingHoneySnitch/
-├── flyinghoneysnitch/
+honeysnatch/
+├── honeysnatch/
 │   ├── core/           # 802.11 packet capture, parsing, scanner engine
 │   ├── analysis/       # Post-hoc analytics, pattern detection, HTML reports
 │   ├── bluetooth/      # BlueScout — BLE/BT scanning, ad parser, classifier
@@ -299,7 +299,7 @@ FlyingHoneySnitch/
 python -m pytest tests/ -v
 
 # With coverage report
-python -m pytest tests/ --cov=flyinghoneysnitch --cov-report=term-missing
+python -m pytest tests/ --cov=honeysnatch --cov-report=term-missing
 
 # Smoke test (fast, no hardware, no root)
 python smoke_test.py
@@ -320,7 +320,7 @@ MIT — see [LICENSE](LICENSE)
 ## Links
 
 - **Homepage:** https://ihbv.io
-- **Repository:** https://github.com/MoSLoF/FlyingHoneySnitch
+- **Repository:** https://github.com/MoSLoF/honeysnatch
 - **HackberryPi CM5 deployment:** [DEPLOY.md](DEPLOY.md)
 - **AirSnitch paper:** Mathy Vanhoef, NDSS 2026 — https://papers.mathyvanhoef.com/ndss2026-airsnitch.pdf
 - **Security policy:** [SECURITY.md](SECURITY.md)

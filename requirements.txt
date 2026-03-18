@@ -1,4 +1,4 @@
-# FlyingHoneySnitch — Core Runtime Requirements
+# honeysnatch — Core Runtime Requirements
 # Generated from full codebase import audit
 # Python >= 3.10 required
 #

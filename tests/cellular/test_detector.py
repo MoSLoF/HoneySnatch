@@ -2,12 +2,12 @@
 
 import pytest
 
-from flyinghoneysnitch.cellular.detector import (
+from honeysnatch.cellular.detector import (
     MAX_SIGNAL_DELTA,
     STRONG_SIGNAL_THRESHOLD,
     RogueBaseStationDetector,
 )
-from flyinghoneysnitch.cellular.models import CellTower
+from honeysnatch.cellular.models import CellTower
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # deploy-hackberrypi.sh
-# FlyingHoneySnitch — HackberryPi CM5 Deployment Script
+# honeysnatch — HackberryPi CM5 Deployment Script
 #
 # Target hardware: HackberryPi CM5 (ZitaoTech / Elecrow)
 #   CPU : Raspberry Pi CM5, Quad-core Cortex-A76 ARMv8 64-bit @ 2.4 GHz
@@ -81,7 +81,7 @@ run() {
 # ---------------------------------------------------------------------------
 # Pre-flight checks
 # ---------------------------------------------------------------------------
-info "FlyingHoneySnitch — HackberryPi CM5 Deployment"
+info "honeysnatch — HackberryPi CM5 Deployment"
 echo
 
 [[ $EUID -eq 0 ]] || die "Must run as root (sudo ./deploy-hackberrypi.sh)"
@@ -105,7 +105,7 @@ ok "OS: ${OS_NAME}"
 # Script must run from the repo root
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 [[ -f "${REPO_DIR}/pyproject.toml" ]] || \
-    die "Run this script from the FlyingHoneySnitch repo root"
+    die "Run this script from the honeysnatch repo root"
 ok "Repo root: ${REPO_DIR}"
 
 # ---------------------------------------------------------------------------
@@ -176,7 +176,7 @@ if ! $SKIP_APT; then
         else
             warn "  ${pkg} not available via apt on this ARM64 platform."
             warn "  CellGuard GSM/LTE scanning will require building from source."
-            warn "  See: https://github.com/MoSLoF/FlyingHoneySnitch/wiki/ARM64-CellGuard"
+            warn "  See: https://github.com/MoSLoF/honeysnatch/wiki/ARM64-CellGuard"
         fi
     done
 
@@ -228,7 +228,7 @@ if ! $SKIP_PYTHON; then
         warn "  To build from source: git clone https://github.com/mikeryan/ubertooth && cd ubertooth/host/python && pip install -e ."
     fi
 
-    info "  Installing FlyingHoneySnitch in editable mode..."
+    info "  Installing honeysnatch in editable mode..."
     run "${PIP}" install -e "${REPO_DIR}"
 
     ok "Step 2 complete"
@@ -325,7 +325,7 @@ if $CONFIGURE_GUI; then
     # Create Qt environment profile
     QT_ENV_FILE="/etc/profile.d/fhs-qt-display.sh"
     cat > "$QT_ENV_FILE" << 'EOF'
-# FlyingHoneySnitch — Qt display config for HackberryPi CM5 (720x720)
+# honeysnatch — Qt display config for HackberryPi CM5 (720x720)
 export QT_SCALE_FACTOR=1.0
 export QT_AUTO_SCREEN_SCALE_FACTOR=0
 export QT_SCREEN_SCALE_FACTORS=1
@@ -340,7 +340,7 @@ EOF
     cat > "${DESKTOP_DIR}/fhs-gui.desktop" << EOF
 [Desktop Entry]
 Type=Application
-Name=FlyingHoneySnitch
+Name=honeysnatch
 Comment=Wireless Discovery & Assessment Suite
 Exec=bash -c 'source /etc/profile.d/fhs-qt-display.sh && ${REPO_DIR}/.venv/bin/fhs gui'
 Icon=network-wireless
@@ -403,7 +403,7 @@ ok "Step 7 complete"
 # ---------------------------------------------------------------------------
 echo
 echo -e "${BLD}${GRN}════════════════════════════════════════════════════════════════${RST}"
-echo -e "${BLD}${GRN}  FlyingHoneySnitch — HackberryPi CM5 Deployment Complete${RST}"
+echo -e "${BLD}${GRN}  honeysnatch — HackberryPi CM5 Deployment Complete${RST}"
 echo -e "${BLD}${GRN}════════════════════════════════════════════════════════════════${RST}"
 echo
 echo -e "  ${BLD}Activate venv:${RST}   source ${REPO_DIR}/.venv/bin/activate"

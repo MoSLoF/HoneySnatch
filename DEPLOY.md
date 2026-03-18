@@ -1,4 +1,4 @@
-# FlyingHoneySnitch — HackberryPi CM5 Deployment Guide
+# honeysnatch — HackberryPi CM5 Deployment Guide
 
 > Platform notes for running FHS on the **HackberryPi CM5**
 > (ZitaoTech / Elecrow, Raspberry Pi Compute Module 5)
@@ -52,7 +52,7 @@ Use `wlan1` (first USB adapter) and `wlan2` (second USB adapter).
 ## Quick Deploy from iHBV-TUF (Windows / PowerShell)
 
 ```powershell
-# From H:\Development\Projects\FlyingHoneySnitch on iHBV-TUF:
+# From H:\Development\Projects\honeysnatch on iHBV-TUF:
 
 # 1. Test connectivity and push repo (no deploy yet)
 .\Prepare-HackberryPi.ps1 -DeviceHost hackberrypi.local
@@ -84,7 +84,7 @@ Then on the device:
 
 ```bash
 # Full deploy (WiFi scanning + Bluetooth + GPS + isolation testing)
-cd ~/FlyingHoneySnitch
+cd ~/honeysnatch
 sudo bash deploy-hackberrypi.sh
 
 # With Qt display config for the 720x720 touchscreen
@@ -100,7 +100,7 @@ sudo bash deploy-hackberrypi.sh --skip-hostap
 
 ```bash
 # Activate venv
-source ~/FlyingHoneySnitch/.venv/bin/activate
+source ~/honeysnatch/.venv/bin/activate
 
 # Check system status and interface detection
 fhs info
@@ -126,7 +126,7 @@ fhs isolation run-all -i wlan0 -j wlan1 --simulate
 
 # Isolation testing — live (needs 2 USB adapters + hostap build)
 sudo fhs isolation run-all -i wlan1 -j wlan2 \
-    --config ~/FlyingHoneySnitch/data/isolation/client.conf
+    --config ~/honeysnatch/data/isolation/client.conf
 ```
 
 ---
@@ -214,7 +214,7 @@ As you develop on `iHBV-TUF`, push changes to the HackberryPi without full redep
 Or from the HackberryPi directly if you've set up SSH key auth to GitHub:
 
 ```bash
-cd ~/FlyingHoneySnitch
+cd ~/honeysnatch
 git pull origin main
 pip install -e .       # picks up any new dependencies
 ```

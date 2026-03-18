@@ -1,4 +1,4 @@
-"""FlyingHoneySnitch comprehensive smoke test."""
+"""honeysnatch comprehensive smoke test."""
 import sys
 import os
 import tempfile
@@ -25,51 +25,51 @@ def check(name, fn):
 
 # === 1. Core Imports ===
 print("=== 1. Core Imports ===")
-import flyinghoneysnitch
-check("__app_name__", lambda: assert_eq(flyinghoneysnitch.__app_name__, "FlyingHoneySnitch"))
-check("__version__", lambda: assert_eq(flyinghoneysnitch.__version__, "0.1.0"))
-check("core.models", lambda: __import__("flyinghoneysnitch.core.models"))
-check("db.schema", lambda: __import__("flyinghoneysnitch.db.schema"))
-check("db.database", lambda: __import__("flyinghoneysnitch.db.database"))
-check("utils.config", lambda: __import__("flyinghoneysnitch.utils.config"))
-check("utils.crypto", lambda: __import__("flyinghoneysnitch.utils.crypto"))
-check("utils.logger", lambda: __import__("flyinghoneysnitch.utils.logger"))
-check("analysis", lambda: __import__("flyinghoneysnitch.analysis"))
-check("mapping", lambda: __import__("flyinghoneysnitch.mapping"))
-check("monitoring", lambda: __import__("flyinghoneysnitch.monitoring"))
-check("cellular", lambda: __import__("flyinghoneysnitch.cellular"))
-check("bluetooth", lambda: __import__("flyinghoneysnitch.bluetooth"))
-check("cli.main", lambda: __import__("flyinghoneysnitch.cli.main"))
-check("cli.isolation", lambda: __import__("flyinghoneysnitch.cli.isolation"))
+import honeysnatch
+check("__app_name__", lambda: assert_eq(honeysnatch.__app_name__, "honeysnatch"))
+check("__version__", lambda: assert_eq(honeysnatch.__version__, "0.1.0"))
+check("core.models", lambda: __import__("honeysnatch.core.models"))
+check("db.schema", lambda: __import__("honeysnatch.db.schema"))
+check("db.database", lambda: __import__("honeysnatch.db.database"))
+check("utils.config", lambda: __import__("honeysnatch.utils.config"))
+check("utils.crypto", lambda: __import__("honeysnatch.utils.crypto"))
+check("utils.logger", lambda: __import__("honeysnatch.utils.logger"))
+check("analysis", lambda: __import__("honeysnatch.analysis"))
+check("mapping", lambda: __import__("honeysnatch.mapping"))
+check("monitoring", lambda: __import__("honeysnatch.monitoring"))
+check("cellular", lambda: __import__("honeysnatch.cellular"))
+check("bluetooth", lambda: __import__("honeysnatch.bluetooth"))
+check("cli.main", lambda: __import__("honeysnatch.cli.main"))
+check("cli.isolation", lambda: __import__("honeysnatch.cli.isolation"))
 
 # === 2. Isolation Package Imports ===
 print("\n=== 2. Isolation Package Imports ===")
-check("isolation", lambda: __import__("flyinghoneysnitch.isolation"))
-check("isolation.config", lambda: __import__("flyinghoneysnitch.isolation.config"))
-check("isolation.models", lambda: __import__("flyinghoneysnitch.isolation.models"))
-check("isolation.runner", lambda: __import__("flyinghoneysnitch.isolation.runner"))
-check("isolation.daemon", lambda: __import__("flyinghoneysnitch.isolation.daemon"))
-check("isolation.monitor", lambda: __import__("flyinghoneysnitch.isolation.monitor"))
-check("isolation.supplicant", lambda: __import__("flyinghoneysnitch.isolation.supplicant"))
-check("isolation.attacks", lambda: __import__("flyinghoneysnitch.isolation.attacks"))
-check("isolation.attacks.base", lambda: __import__("flyinghoneysnitch.isolation.attacks.base"))
-check("isolation.attacks.gtk_abuse", lambda: __import__("flyinghoneysnitch.isolation.attacks.gtk_abuse"))
-check("isolation.attacks.client2client", lambda: __import__("flyinghoneysnitch.isolation.attacks.client2client"))
-check("isolation.attacks.client2monitor", lambda: __import__("flyinghoneysnitch.isolation.attacks.client2monitor"))
-check("isolation.attacks.port_steal", lambda: __import__("flyinghoneysnitch.isolation.attacks.port_steal"))
-check("isolation.attacks.broadcast_reflection", lambda: __import__("flyinghoneysnitch.isolation.attacks.broadcast_reflection"))
-check("isolation.attacks.gateway_bounce", lambda: __import__("flyinghoneysnitch.isolation.attacks.gateway_bounce"))
-check("isolation.libwifi", lambda: __import__("flyinghoneysnitch.isolation.libwifi"))
-check("isolation.libwifi.crypto", lambda: __import__("flyinghoneysnitch.isolation.libwifi.crypto"))
-check("isolation.framework", lambda: __import__("flyinghoneysnitch.isolation.framework"))
-check("isolation.framework.testcase", lambda: __import__("flyinghoneysnitch.isolation.framework.testcase"))
-check("isolation.framework.daemon", lambda: __import__("flyinghoneysnitch.isolation.framework.daemon"))
-check("isolation.framework.station", lambda: __import__("flyinghoneysnitch.isolation.framework.station"))
-check("isolation.port_restoration", lambda: __import__("flyinghoneysnitch.isolation.port_restoration"))
+check("isolation", lambda: __import__("honeysnatch.isolation"))
+check("isolation.config", lambda: __import__("honeysnatch.isolation.config"))
+check("isolation.models", lambda: __import__("honeysnatch.isolation.models"))
+check("isolation.runner", lambda: __import__("honeysnatch.isolation.runner"))
+check("isolation.daemon", lambda: __import__("honeysnatch.isolation.daemon"))
+check("isolation.monitor", lambda: __import__("honeysnatch.isolation.monitor"))
+check("isolation.supplicant", lambda: __import__("honeysnatch.isolation.supplicant"))
+check("isolation.attacks", lambda: __import__("honeysnatch.isolation.attacks"))
+check("isolation.attacks.base", lambda: __import__("honeysnatch.isolation.attacks.base"))
+check("isolation.attacks.gtk_abuse", lambda: __import__("honeysnatch.isolation.attacks.gtk_abuse"))
+check("isolation.attacks.client2client", lambda: __import__("honeysnatch.isolation.attacks.client2client"))
+check("isolation.attacks.client2monitor", lambda: __import__("honeysnatch.isolation.attacks.client2monitor"))
+check("isolation.attacks.port_steal", lambda: __import__("honeysnatch.isolation.attacks.port_steal"))
+check("isolation.attacks.broadcast_reflection", lambda: __import__("honeysnatch.isolation.attacks.broadcast_reflection"))
+check("isolation.attacks.gateway_bounce", lambda: __import__("honeysnatch.isolation.attacks.gateway_bounce"))
+check("isolation.libwifi", lambda: __import__("honeysnatch.isolation.libwifi"))
+check("isolation.libwifi.crypto", lambda: __import__("honeysnatch.isolation.libwifi.crypto"))
+check("isolation.framework", lambda: __import__("honeysnatch.isolation.framework"))
+check("isolation.framework.testcase", lambda: __import__("honeysnatch.isolation.framework.testcase"))
+check("isolation.framework.daemon", lambda: __import__("honeysnatch.isolation.framework.daemon"))
+check("isolation.framework.station", lambda: __import__("honeysnatch.isolation.framework.station"))
+check("isolation.port_restoration", lambda: __import__("honeysnatch.isolation.port_restoration"))
 
 # === 3. Config System ===
 print("\n=== 3. Config System ===")
-from flyinghoneysnitch.utils.config import AppConfig
+from honeysnatch.utils.config import AppConfig
 cfg = AppConfig()
 check("AppConfig has isolation", lambda: assert_eq(hasattr(cfg, "isolation"), True))
 check("IsolationConfig.enabled (off by default)", lambda: assert_eq(cfg.isolation.enabled, False))
@@ -83,8 +83,8 @@ check("SecurityConfig.audit_enabled", lambda: assert_eq(cfg.security.audit_enabl
 print("\n=== 4. Database CRUD ===")
 tmpdir = tempfile.mkdtemp()
 try:
-    from flyinghoneysnitch.db.database import DatabaseManager
-    from flyinghoneysnitch.core.models import AccessPoint, Client, EncryptionType, GeoPosition
+    from honeysnatch.db.database import DatabaseManager
+    from honeysnatch.core.models import AccessPoint, Client, EncryptionType, GeoPosition
 
     db_path = os.path.join(tmpdir, "smoke_test.db")
     db = DatabaseManager(db_path)
@@ -147,8 +147,8 @@ finally:
 
 # === 5. Isolation Models & Attacks ===
 print("\n=== 5. Isolation Models & Attacks ===")
-from flyinghoneysnitch.isolation.attacks.base import AttackType, AttackOutcome, AttackResult
-from flyinghoneysnitch.isolation.models import IsolationTestSession
+from honeysnatch.isolation.attacks.base import AttackType, AttackOutcome, AttackResult
+from honeysnatch.isolation.models import IsolationTestSession
 
 check("AttackType has 13 types", lambda: assert_eq(len(AttackType), 13))
 check("AttackOutcome values", lambda: (
@@ -178,12 +178,12 @@ check("secure_count", lambda: assert_eq(session.secure_count, 1))
 session.finish()
 check("session.finish()", lambda: assert_eq(session.end_time is not None, True))
 
-from flyinghoneysnitch.isolation.attacks.gtk_abuse import check_gtk_shared
-from flyinghoneysnitch.isolation.attacks.broadcast_reflection import create_broadcast_reflection_result
-from flyinghoneysnitch.isolation.attacks.gateway_bounce import create_gateway_bounce_result
-from flyinghoneysnitch.isolation.attacks.port_steal import create_port_steal_result
-from flyinghoneysnitch.isolation.attacks.client2client import create_c2c_result
-from flyinghoneysnitch.isolation.attacks.client2monitor import create_c2m_result
+from honeysnatch.isolation.attacks.gtk_abuse import check_gtk_shared
+from honeysnatch.isolation.attacks.broadcast_reflection import create_broadcast_reflection_result
+from honeysnatch.isolation.attacks.gateway_bounce import create_gateway_bounce_result
+from honeysnatch.isolation.attacks.port_steal import create_port_steal_result
+from honeysnatch.isolation.attacks.client2client import create_c2c_result
+from honeysnatch.isolation.attacks.client2monitor import create_c2m_result
 
 r1 = check_gtk_shared(b"aabbccdd", b"aabbccdd", 1, 1)
 check("check_gtk_shared (shared)", lambda: assert_eq(r1.outcome, AttackOutcome.VULNERABLE))
@@ -204,7 +204,7 @@ check("c2m", lambda: assert_eq(r8.attack_type, AttackType.CLIENT_TO_MONITOR))
 
 # === 6. Isolation Runner (simulate) ===
 print("\n=== 6. Isolation Runner (simulate) ===")
-from flyinghoneysnitch.isolation.runner import IsolationTestRunner
+from honeysnatch.isolation.runner import IsolationTestRunner
 
 runner_sim = IsolationTestRunner(interface="wlan0", simulate=True)
 check("IsolationTestRunner (simulate) creation", lambda: assert_eq(runner_sim is not None, True))
@@ -245,7 +245,7 @@ check("run_all end_time set", lambda: assert_eq(sess_all.end_time is not None, T
 # === 7. CLI Registration ===
 print("\n=== 7. CLI Registration ===")
 from click.testing import CliRunner
-from flyinghoneysnitch.cli.main import cli
+from honeysnatch.cli.main import cli
 cli_runner = CliRunner()
 
 result_ver = cli_runner.invoke(cli, ["--version"])
@@ -270,7 +270,7 @@ check("CLI isolation run-all output has INCONCLUSIVE",
 
 # === 8. Crypto (FHS magic) ===
 print("\n=== 8. Crypto (FHS magic) ===")
-from flyinghoneysnitch.utils.crypto import MAGIC, encrypt_file, decrypt_file, is_encrypted_file
+from honeysnatch.utils.crypto import MAGIC, encrypt_file, decrypt_file, is_encrypted_file
 check("MAGIC == FHS\\x01", lambda: assert_eq(MAGIC, b"FHS\x01"))
 
 tmpdir2 = tempfile.mkdtemp()
@@ -279,7 +279,7 @@ try:
     enc = os.path.join(tmpdir2, "encrypted.fhs")
     dec = os.path.join(tmpdir2, "decrypted.txt")
     with open(src, "w") as f:
-        f.write("FlyingHoneySnitch smoke test data")
+        f.write("honeysnatch smoke test data")
     encrypt_file(src, enc, "testpass123")
     check("encrypt_file creates file", lambda: assert_eq(os.path.exists(enc), True))
     check("is_encrypted_file", lambda: assert_eq(is_encrypted_file(enc), True))
@@ -287,13 +287,13 @@ try:
     decrypt_file(enc, dec, "testpass123")
     with open(dec) as f:
         content = f.read()
-    check("decrypt roundtrip matches", lambda: assert_eq(content, "FlyingHoneySnitch smoke test data"))
+    check("decrypt roundtrip matches", lambda: assert_eq(content, "honeysnatch smoke test data"))
 finally:
     shutil.rmtree(tmpdir2)
 
 # === 9. libwifi CCMP Crypto ===
 print("\n=== 9. libwifi CCMP Crypto ===")
-from flyinghoneysnitch.isolation.libwifi.crypto import encrypt_ccmp, decrypt_ccmp, aes_wrap_key
+from honeysnatch.isolation.libwifi.crypto import encrypt_ccmp, decrypt_ccmp, aes_wrap_key
 check("encrypt_ccmp callable", lambda: assert_eq(callable(encrypt_ccmp), True))
 check("decrypt_ccmp callable", lambda: assert_eq(callable(decrypt_ccmp), True))
 check("aes_wrap_key callable", lambda: assert_eq(callable(aes_wrap_key), True))
@@ -318,12 +318,12 @@ check("vendor/hostap_2_10/ exists", lambda: assert_eq(os.path.isdir(os.path.join
 
 # === 12. BlueScout (Track 1) ===
 print("\n=== 12. BlueScout ===")
-from flyinghoneysnitch.bluetooth import (
+from honeysnatch.bluetooth import (
     BluetoothDevice, BluetoothDeviceType, BleAdvertisement, BleAdvType,
     parse_ble_advertisement, classify_bt_device, summarise_device,
     BluetoothScanner,
 )
-from flyinghoneysnitch.bluetooth.models import classify_cod, lookup_company
+from honeysnatch.bluetooth.models import classify_cod, lookup_company
 
 # iBeacon AD payload (hand-crafted)
 IBEACON_AD = bytes([
@@ -392,7 +392,7 @@ check("BluetoothScanner packet_count=0", lambda: assert_eq(scanner.packet_count,
 
 # === 13. CellGuard (Track 2) ===
 print("\n=== 13. CellGuard ===")
-from flyinghoneysnitch.cellular import (
+from honeysnatch.cellular import (
     CellTower, CellularScanner, RogueBaseStationDetector,
     NrScanner, nrarfcn_to_freq, freq_to_nr_band,
     arfcn_to_freq, earfcn_to_freq, earfcn_to_band, classify_cell_tower,
@@ -482,7 +482,7 @@ check("NrScanner instantiates", lambda: assert_eq(nr is not None, True))
 
 # === 14. DB — Cell / BT / Rogue tables (Track 2) ===
 print("\n=== 14. DB Cell/BT/Rogue tables ===")
-from flyinghoneysnitch.db.schema import (
+from honeysnatch.db.schema import (
     CellTowerRecord, CellRogueAlertRecord, BluetoothDeviceRecord,
 )
 check("CellTowerRecord tablename",
@@ -494,7 +494,7 @@ check("BluetoothDeviceRecord tablename",
 
 tmpdir3 = tempfile.mkdtemp()
 try:
-    from flyinghoneysnitch.db.database import DatabaseManager as DM2
+    from honeysnatch.db.database import DatabaseManager as DM2
     db2 = DM2(os.path.join(tmpdir3, "fhs_ct_bt.db"))
     sid2 = db2.create_scan_session(name="ct-bt-test", interface="wlan0")
 
@@ -560,9 +560,9 @@ check("PORT_STEAL_UPLINK in results",
 # Persist simulate session to DB
 tmpdir4 = tempfile.mkdtemp()
 try:
-    from flyinghoneysnitch.db.database import DatabaseManager as DM3
+    from honeysnatch.db.database import DatabaseManager as DM3
     db3 = DM3(os.path.join(tmpdir4, "fhs_iso.db"))
-    from flyinghoneysnitch.cli.isolation import _persist_isolation_session
+    from honeysnatch.cli.isolation import _persist_isolation_session
     _persist_isolation_session(db3, full_session)
     check("_persist_isolation_session no exception", lambda: assert_eq(True, True))
     from sqlalchemy import inspect as sa3

@@ -2,14 +2,14 @@
 
 import pytest
 
-from flyinghoneysnitch.core.models import (
+from honeysnatch.core.models import (
     AccessPoint,
     Band,
     Client,
     EncryptionType,
     GeoPosition,
 )
-from flyinghoneysnitch.db.database import DatabaseManager, create_session_db
+from honeysnatch.db.database import DatabaseManager, create_session_db
 
 
 @pytest.fixture

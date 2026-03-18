@@ -3,9 +3,9 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.backends._legacy:_Backend"
 
 [project]
-name = "flyinghoneysnitch"
+name = "honeysnatch"
 version = "0.1.0"
-description = "FlyingHoneySnitch - Wireless Discovery, Assessment & Isolation Testing Suite"
+description = "honeysnatch - Wireless Discovery, Assessment & Isolation Testing Suite"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
@@ -103,7 +103,7 @@ encrypted_db = [
 
 # Install everything (for development / full deployment)
 all = [
-    "flyinghoneysnitch[gui,gps,bluetooth,cellular,imu]",
+    "honeysnatch[gui,gps,bluetooth,cellular,imu]",
 ]
 
 # Development & test tooling
@@ -121,24 +121,24 @@ dev = [
 # Entry points
 # ---------------------------------------------------------------------------
 [project.scripts]
-fhs = "flyinghoneysnitch.cli.main:cli"
+fhs = "honeysnatch.cli.main:cli"
 
 [project.gui-scripts]
-fhs-gui = "flyinghoneysnitch.gui.app:main"
+fhs-gui = "honeysnatch.gui.app:main"
 
 # ---------------------------------------------------------------------------
 # Project URLs
 # ---------------------------------------------------------------------------
 [project.urls]
 Homepage      = "https://ihbv.io"
-Repository    = "https://github.com/MoSLoF/FlyingHoneySnitch"
-Documentation = "https://github.com/MoSLoF/FlyingHoneySnitch/wiki"
+Repository    = "https://github.com/MoSLoF/honeysnatch"
+Documentation = "https://github.com/MoSLoF/honeysnatch/wiki"
 
 # ---------------------------------------------------------------------------
 # Packaging
 # ---------------------------------------------------------------------------
 [tool.setuptools.packages.find]
-include = ["flyinghoneysnitch*"]
+include = ["honeysnatch*"]
 
 # ---------------------------------------------------------------------------
 # pytest

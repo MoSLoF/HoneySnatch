@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from flyinghoneysnitch.utils.crypto import (
+from honeysnatch.utils.crypto import (
     MAGIC,
     derive_key,
     encrypt_file,
@@ -37,7 +37,7 @@ class TestFileEncryption:
 
     def test_roundtrip(self, tmp_path):
         plain = tmp_path / "plain.txt"
-        plain.write_text("Hello, FlyingHoneySnitch!")
+        plain.write_text("Hello, honeysnatch!")
 
         enc = str(tmp_path / "encrypted.bin")
         dec = str(tmp_path / "decrypted.txt")
@@ -45,7 +45,7 @@ class TestFileEncryption:
         encrypt_file(str(plain), enc, "secret")
         decrypt_file(enc, dec, "secret")
 
-        assert (tmp_path / "decrypted.txt").read_text() == "Hello, FlyingHoneySnitch!"
+        assert (tmp_path / "decrypted.txt").read_text() == "Hello, honeysnatch!"
 
     def test_encrypted_file_has_magic(self, tmp_path):
         plain = tmp_path / "data.bin"

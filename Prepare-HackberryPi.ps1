@@ -1,14 +1,14 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    FlyingHoneySnitch — HackberryPi CM5 Pre-Flight Setup
+    honeysnatch — HackberryPi CM5 Pre-Flight Setup
     Run this on iHBV-TUF (Windows) to prepare a HackberryPi CM5
     before first boot / first connect.
 
 .DESCRIPTION
     Covers:
       1. Verify SSH connectivity to the device
-      2. Push the FlyingHoneySnitch repo to the device
+      2. Push the honeysnatch repo to the device
       3. Transfer deploy script and requirements files
       4. Optionally launch the deploy script over SSH
       5. Wire in the FHS MCP server endpoint for remote ops
@@ -26,7 +26,7 @@
     SSH username. Default: kali (Kali default) or pi (Pi OS default)
 
 .PARAMETER RepoPath
-    Local path to the FlyingHoneySnitch repo. Default: H:\Development\Projects\FlyingHoneySnitch
+    Local path to the honeysnatch repo. Default: H:\Development\Projects\honeysnatch
 
 .PARAMETER Deploy
     If set, automatically runs deploy-hackberrypi.sh on the device after push.
@@ -43,7 +43,7 @@
 param(
     [string] $DeviceHost  = "hackberrypi.local",
     [string] $DeviceUser  = "kali",
-    [string] $RepoPath    = "H:\Development\Projects\FlyingHoneySnitch",
+    [string] $RepoPath    = "H:\Development\Projects\honeysnatch",
     [switch] $Deploy,
     [switch] $SkipHostap,
     [switch] $DryRun
@@ -87,7 +87,7 @@ function Invoke-SCP {
 # ---------------------------------------------------------------------------
 Write-Host ""
 Write-Host "  ╔═════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "  ║  FlyingHoneySnitch — HackberryPi CM5 Pre-Flight Setup  ║" -ForegroundColor Cyan
+Write-Host "  ║  honeysnatch — HackberryPi CM5 Pre-Flight Setup  ║" -ForegroundColor Cyan
 Write-Host "  ╚═════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  Target : ${DeviceUser}@${DeviceHost}" -ForegroundColor White
@@ -101,7 +101,7 @@ Write-Host ""
 # ---------------------------------------------------------------------------
 Write-Step "Step 1 — Checking local repo"
 if (-not (Test-Path "$RepoPath\pyproject.toml")) {
-    throw "Repo not found at: $RepoPath`nSet -RepoPath to the FlyingHoneySnitch directory."
+    throw "Repo not found at: $RepoPath`nSet -RepoPath to the honeysnatch directory."
 }
 Write-Ok "Repo found: $RepoPath"
 
@@ -145,7 +145,7 @@ if ($rsyncCheck -match "MISSING") {
 # ---------------------------------------------------------------------------
 Write-Step "Step 4 — Pushing repo to device"
 
-$RemoteRepoDir = "/home/${DeviceUser}/FlyingHoneySnitch"
+$RemoteRepoDir = "/home/${DeviceUser}/honeysnatch"
 Invoke-SSH "mkdir -p $RemoteRepoDir"
 
 # Files/dirs to exclude from transfer (local dev artefacts, Windows paths)
@@ -254,7 +254,7 @@ if ($Deploy) {
     Write-Step "Step 8 — Deploy script ready (skipped — use -Deploy to run automatically)"
     Write-Host ""
     Write-Host "  To deploy manually, SSH into the device and run:" -ForegroundColor Cyan
-    Write-Host "    cd ~/FlyingHoneySnitch" -ForegroundColor White
+    Write-Host "    cd ~/honeysnatch" -ForegroundColor White
     Write-Host "    sudo bash deploy-hackberrypi.sh" -ForegroundColor White
     Write-Host "    sudo bash deploy-hackberrypi.sh --gui         # + Qt display config" -ForegroundColor White
     Write-Host "    sudo bash deploy-hackberrypi.sh --skip-hostap # Skip isolation build" -ForegroundColor White
@@ -269,11 +269,11 @@ Write-Host "  ║  Pre-Flight Complete — Quick Reference                 ║" 
 Write-Host "  ╚═════════════════════════════════════════════════════════╝" -ForegroundColor Green
 Write-Host ""
 Write-Host "  SSH into device:    ssh ${DeviceUser}@${DeviceHost}" -ForegroundColor White
-Write-Host "  Repo on device:     ~/FlyingHoneySnitch" -ForegroundColor White
+Write-Host "  Repo on device:     ~/honeysnatch" -ForegroundColor White
 Write-Host "  Deploy log:         /tmp/fhs-deploy.log" -ForegroundColor White
 Write-Host ""
 Write-Host "  After deploy, on device:" -ForegroundColor Cyan
-Write-Host "    source ~/FlyingHoneySnitch/.venv/bin/activate" -ForegroundColor White
+Write-Host "    source ~/honeysnatch/.venv/bin/activate" -ForegroundColor White
 Write-Host "    fhs info" -ForegroundColor White
 Write-Host "    fhs isolation run-all -i wlan0 -j wlan1 --simulate" -ForegroundColor White
 Write-Host ""

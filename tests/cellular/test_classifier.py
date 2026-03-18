@@ -2,12 +2,12 @@
 
 import pytest
 
-from flyinghoneysnitch.cellular.classifier import (
+from honeysnatch.cellular.classifier import (
     SIGNAL_CATEGORIES,
     TECH_SECURITY,
     classify_cell_tower,
 )
-from flyinghoneysnitch.cellular.models import CellTower
+from honeysnatch.cellular.models import CellTower
 
 
 class TestClassifyCellTower:
