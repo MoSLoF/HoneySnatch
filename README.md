@@ -4,7 +4,7 @@ Wireless Discovery, Assessment & Isolation Testing Suite.
 
 **FlyingHoneyBadger** (passive wireless discovery) + **AirSnitch** (active client isolation testing) = **honeysnatch**.
 
-> **Origin:** A cross between FlyingHoneyBadger (DoD GOTS FlyingSquirrel lineage) and
+> **Origin:** A cross between FlyingHoneyBadger and
 > [AirSnitch](https://github.com/vanhoefm/airsnitch) (Mathy Vanhoef, NDSS '26).
 > Built by [HoneyBadger Vanguard LLC](https://ihbv.io). `$global:Intent = 'Purple'`
 
