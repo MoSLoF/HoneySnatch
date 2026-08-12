@@ -27,7 +27,7 @@ def check(name, fn):
 print("=== 1. Core Imports ===")
 import honeysnatch
 check("__app_name__", lambda: assert_eq(honeysnatch.__app_name__, "honeysnatch"))
-check("__version__", lambda: assert_eq(honeysnatch.__version__, "0.1.0"))
+check("__version__", lambda: assert_eq(honeysnatch.__version__, "0.1.8"))
 check("core.models", lambda: __import__("honeysnatch.core.models"))
 check("db.schema", lambda: __import__("honeysnatch.db.schema"))
 check("db.database", lambda: __import__("honeysnatch.db.database"))
@@ -249,7 +249,7 @@ from honeysnatch.cli.main import cli
 cli_runner = CliRunner()
 
 result_ver = cli_runner.invoke(cli, ["--version"])
-check("fhs --version", lambda: assert_eq("0.1.0" in result_ver.output, True))
+check("fhs --version", lambda: assert_eq("0.1.8" in result_ver.output, True))
 
 result_help = cli_runner.invoke(cli, ["--help"])
 for cmd in ["scan", "analyze", "export", "monitor", "bluetooth", "cellular", "isolation", "gui", "info", "audit"]:
@@ -299,14 +299,21 @@ check("decrypt_ccmp callable", lambda: assert_eq(callable(decrypt_ccmp), True))
 check("aes_wrap_key callable", lambda: assert_eq(callable(aes_wrap_key), True))
 
 # === 10. Data Files ===
+# HS-05: data/ moved into the package as honeysnatch/data/ so it ships in
+# the wheel. The smoke test checks BOTH the on-disk location (installed
+# or source-checkout) and the importlib.resources path.
 print("\n=== 10. Data Files ===")
-data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-check("data/ dir exists", lambda: assert_eq(os.path.isdir(data_dir), True))
-check("default_config.yaml exists", lambda: assert_eq(os.path.isfile(os.path.join(data_dir, "default_config.yaml")), True))
-check("mccmnc.csv exists", lambda: assert_eq(os.path.isfile(os.path.join(data_dir, "mccmnc.csv")), True))
-iso_dir = os.path.join(data_dir, "isolation")
-check("data/isolation/ exists", lambda: assert_eq(os.path.isdir(iso_dir), True))
-iso_files = os.listdir(iso_dir)
+import importlib.resources as _res
+_pkg_data = _res.files("honeysnatch.data")
+check("honeysnatch.data package resolvable", lambda: assert_eq(_pkg_data.is_dir(), True))
+check("default_config.yaml exists (packaged)",
+      lambda: assert_eq((_pkg_data / "default_config.yaml").is_file(), True))
+check("mccmnc.csv exists (packaged)",
+      lambda: assert_eq((_pkg_data / "mccmnc.csv").is_file(), True))
+_pkg_iso = _res.files("honeysnatch.data.isolation")
+check("honeysnatch.data.isolation package resolvable",
+      lambda: assert_eq(_pkg_iso.is_dir(), True))
+iso_files = [p.name for p in _pkg_iso.iterdir() if p.name.endswith(".conf")]
 check("isolation configs present", lambda: assert_eq(len(iso_files) > 5, True))
 
 # === 11. Vendor Directory ===
@@ -343,8 +350,14 @@ check("BLE parser: iBeacon uuid present", lambda: assert_eq("uuid" in adv.beacon
 check("BLE parser: iBeacon major=1", lambda: assert_eq(adv.beacon_meta["major"], 1))
 check("BLE parser: iBeacon minor=2", lambda: assert_eq(adv.beacon_meta["minor"], 2))
 
-# CoD classification
-major, minor = classify_cod(0x200404)
+# CoD classification. Value 0x20020C decodes per BT SIG assigned numbers as:
+#   bits  2- 7 (minor) = 3 → Smartphone
+#   bits  8-12 (major) = 2 → Phone
+#   bits 13-23 (service) = 1 → Positioning
+# The pre-remediation constant 0x200404 decoded correctly to Audio/Video +
+# Headset, not Phone + Smartphone — the constant was the bug, not the
+# classifier (review finding F-10).
+major, minor = classify_cod(0x20020C)
 check("CoD major=Phone", lambda: assert_eq(major, "Phone"))
 check("CoD minor=Smartphone", lambda: assert_eq(minor, "Smartphone"))
 
@@ -412,9 +425,16 @@ check("freq_to_nr_band 630 → n71",
 check("arfcn_to_freq ch1 → 935.2 MHz",
       lambda: assert_eq(abs(arfcn_to_freq(1) - 935.2) < 0.01, True))
 
-# LTE EARFCN math
-check("earfcn_to_freq band2 → ~1930 MHz",
-      lambda: assert_eq(1920 < earfcn_to_freq(900) < 1940, True))
+# LTE EARFCN math. Per 3GPP TS 36.101 Table 5.7.3-1:
+#   Fdl(MHz) = Fdl_low + 0.1 * (EARFCN - Ndl_offset)
+# Band 2: Ndl_offset=600, Fdl_low=1930.0 → EARFCN 600 = 1930 MHz start.
+# The pre-remediation test used EARFCN 900, which correctly resolves to
+# 1960 MHz — not "~1930". The math was right; the constant was wrong
+# (review finding F-11).
+check("earfcn_to_freq band2 start → ~1930 MHz",
+      lambda: assert_eq(abs(earfcn_to_freq(600) - 1930.0) < 0.1, True))
+check("earfcn_to_freq band2 mid EARFCN 900 → 1960 MHz",
+      lambda: assert_eq(abs(earfcn_to_freq(900) - 1960.0) < 0.1, True))
 check("earfcn_to_band 5095 → 12",
       lambda: assert_eq(earfcn_to_band(5095), 12))
 

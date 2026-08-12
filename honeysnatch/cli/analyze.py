@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import click
 from rich.console import Console
+from honeysnatch.db.factory import open_database
 from rich.table import Table
 
 console = Console()
@@ -20,11 +21,11 @@ def analyze():
 
 @analyze.command("sessions")
 @click.argument("db_path", type=click.Path(exists=True))
-def list_sessions(db_path: str) -> None:
+@click.pass_context
+def list_sessions(ctx: click.Context, db_path: str) -> None:
     """List scan sessions in a database."""
-    from honeysnatch.db.database import DatabaseManager
 
-    db = DatabaseManager(db_path)
+    db = open_database(db_path, config=ctx.obj.get('config'))
     sessions = db.list_sessions()
     db.close()
 
@@ -60,16 +61,17 @@ def list_sessions(db_path: str) -> None:
 @click.option("--sort", "-s", default="rssi", type=click.Choice(["rssi", "ssid", "channel", "encryption"]))
 @click.option("--filter-enc", "-e", default=None, help="Filter by encryption type.")
 @click.option("--filter-channel", "-c", default=None, type=int, help="Filter by channel.")
+@click.pass_context
 def show_aps(
+    ctx: click.Context,
     db_path: str,
     sort: str,
     filter_enc: str | None,
     filter_channel: int | None,
 ) -> None:
     """Show access points from a scan session."""
-    from honeysnatch.db.database import DatabaseManager
 
-    db = DatabaseManager(db_path)
+    db = open_database(db_path, config=ctx.obj.get('config'))
     sessions = db.list_sessions()
     if not sessions:
         console.print("[yellow]No sessions found.[/]")
@@ -130,11 +132,11 @@ def show_aps(
 @analyze.command("clients")
 @click.argument("db_path", type=click.Path(exists=True))
 @click.option("--sort", "-s", default="rssi", type=click.Choice(["rssi", "mac", "probes"]))
-def show_clients(db_path: str, sort: str) -> None:
+@click.pass_context
+def show_clients(ctx: click.Context, db_path: str, sort: str) -> None:
     """Show discovered clients from a scan session."""
-    from honeysnatch.db.database import DatabaseManager
 
-    db = DatabaseManager(db_path)
+    db = open_database(db_path, config=ctx.obj.get('config'))
     sessions = db.list_sessions()
     if not sessions:
         console.print("[yellow]No sessions found.[/]")
@@ -182,13 +184,12 @@ def show_clients(db_path: str, sort: str) -> None:
 
 @analyze.command("summary")
 @click.argument("db_path", type=click.Path(exists=True))
-def show_summary(db_path: str) -> None:
+@click.pass_context
+def show_summary(ctx: click.Context, db_path: str) -> None:
     """Show summary statistics for a scan session."""
     from collections import Counter
 
-    from honeysnatch.db.database import DatabaseManager
-
-    db = DatabaseManager(db_path)
+    db = open_database(db_path, config=ctx.obj.get('config'))
     sessions = db.list_sessions()
     if not sessions:
         console.print("[yellow]No sessions found.[/]")

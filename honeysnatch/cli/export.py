@@ -13,6 +13,7 @@ from pathlib import Path
 
 import click
 from rich.console import Console
+from honeysnatch.db.factory import open_database
 
 console = Console()
 
@@ -29,14 +30,14 @@ def export():
 @click.option("--type", "-t", "data_type", default="aps", type=click.Choice(["aps", "clients", "all"]))
 @click.option("--encrypt", "-e", is_flag=True, default=False, help="Encrypt the output file (AES-256-GCM).")
 @click.option("--passphrase", "-p", default=None, help="Encryption passphrase (prompted if not given).")
-def export_csv(db_path: str, output: str | None, data_type: str, encrypt: bool, passphrase: str | None) -> None:
+@click.pass_context
+def export_csv(ctx: click.Context, db_path: str, output: str | None, data_type: str, encrypt: bool, passphrase: str | None) -> None:
     """Export scan session to CSV.
 
     DB_PATH is the path to a .db session file.
     """
-    from honeysnatch.db.database import DatabaseManager
 
-    db = DatabaseManager(db_path)
+    db = open_database(db_path, config=ctx.obj.get('config'))
     sessions = db.list_sessions()
 
     if not sessions:
@@ -101,11 +102,11 @@ def export_csv(db_path: str, output: str | None, data_type: str, encrypt: bool, 
 @click.option("--output", "-o", default=None, help="Output file path.")
 @click.option("--encrypt", "-e", is_flag=True, default=False, help="Encrypt the output file (AES-256-GCM).")
 @click.option("--passphrase", "-p", default=None, help="Encryption passphrase (prompted if not given).")
-def export_json(db_path: str, output: str | None, encrypt: bool, passphrase: str | None) -> None:
+@click.pass_context
+def export_json(ctx: click.Context, db_path: str, output: str | None, encrypt: bool, passphrase: str | None) -> None:
     """Export scan session to JSON."""
-    from honeysnatch.db.database import DatabaseManager
 
-    db = DatabaseManager(db_path)
+    db = open_database(db_path, config=ctx.obj.get('config'))
     sessions = db.list_sessions()
 
     if not sessions:
@@ -195,14 +196,14 @@ def export_json(db_path: str, output: str | None, encrypt: bool, passphrase: str
 @click.option("--output", "-o", default=None, help="Output file path.")
 @click.option("--encrypt", "-e", is_flag=True, default=False, help="Encrypt the output file (AES-256-GCM).")
 @click.option("--passphrase", "-p", default=None, help="Encryption passphrase (prompted if not given).")
-def export_kml(db_path: str, output: str | None, encrypt: bool, passphrase: str | None) -> None:
+@click.pass_context
+def export_kml(ctx: click.Context, db_path: str, output: str | None, encrypt: bool, passphrase: str | None) -> None:
     """Export scan session to KML (Google Earth).
 
     Only APs with GPS coordinates will be included.
     """
-    from honeysnatch.db.database import DatabaseManager
 
-    db = DatabaseManager(db_path)
+    db = open_database(db_path, config=ctx.obj.get('config'))
     sessions = db.list_sessions()
 
     if not sessions:

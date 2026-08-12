@@ -84,7 +84,8 @@ def render_session_map(
         folium.Marker(
             location=[ap.position.latitude, ap.position.longitude],
             popup=folium.Popup(popup_html, max_width=300),
-            tooltip=f"{ap.ssid or '[Hidden]'} ({ap.rssi} dBm)",
+            tooltip=(__import__("html").escape(ap.ssid) if ap.ssid else "[Hidden]") +
+                    f" ({ap.rssi} dBm)",
             icon=folium.Icon(color=color, icon="wifi", prefix="fa"),
         ).add_to(ap_cluster)
 
@@ -201,16 +202,30 @@ def _add_heatmap_overlay(m: folium.Map, data: RFHeatmapData) -> None:
 
 
 def _ap_popup(ap: AccessPoint) -> str:
-    """Generate HTML popup content for an access point marker."""
+    """Generate HTML popup content for an access point marker.
+
+    Review finding HS-07: every attacker-controlled field (SSID, vendor,
+    BSSID from an untrusted beacon) is escaped via html.escape before
+    interpolation. A crafted beacon with `<script>` in its SSID cannot
+    inject markup, load remote content, or execute JS in an analyst's
+    browser when they open the rendered map.
+    """
+    import html as _html
+    ssid_disp = _html.escape(ap.ssid) if ap.ssid else "[Hidden]"
+    bssid_disp = _html.escape(ap.bssid)
+    channel_disp = _html.escape(str(ap.channel))
+    band_disp = _html.escape(ap.band.value)
+    enc_disp = _html.escape(ap.encryption.value)
+    vendor_disp = _html.escape(ap.vendor) if ap.vendor else "Unknown"
     return f"""
     <div style="font-family: monospace; font-size: 12px;">
-        <b>{ap.ssid or '[Hidden]'}</b><br>
+        <b>{ssid_disp}</b><br>
         <hr style="margin: 4px 0;">
-        <b>BSSID:</b> {ap.bssid}<br>
-        <b>Channel:</b> {ap.channel} ({ap.band.value})<br>
-        <b>Encryption:</b> {ap.encryption.value}<br>
+        <b>BSSID:</b> {bssid_disp}<br>
+        <b>Channel:</b> {channel_disp} ({band_disp})<br>
+        <b>Encryption:</b> {enc_disp}<br>
         <b>Signal:</b> {ap.rssi} dBm (max: {ap.max_rssi} dBm)<br>
-        <b>Vendor:</b> {ap.vendor or 'Unknown'}<br>
+        <b>Vendor:</b> {vendor_disp}<br>
         <b>Clients:</b> {len(ap.clients)}<br>
         <b>Beacons:</b> {ap.beacon_count}<br>
         <b>WPS:</b> {'Yes' if ap.wps else 'No'}<br>

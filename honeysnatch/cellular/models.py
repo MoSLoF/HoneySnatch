@@ -144,7 +144,24 @@ def load_mccmnc_db(path: Optional[str] = None) -> None:
     global _OPERATOR_DB
 
     if path is None:
-        path = str(Path(__file__).parent.parent.parent / "data" / "mccmnc.csv")
+        # HS-05: data/ moved into the package. Prefer importlib.resources
+        # so wheel installs work; fall back to source-checkout paths.
+        import importlib.resources as _res
+        path = None
+        try:
+            trav = _res.files("honeysnatch.data") / "mccmnc.csv"
+            if trav.is_file():
+                with _res.as_file(trav) as p:
+                    path = str(p)
+        except (ModuleNotFoundError, FileNotFoundError, AttributeError):
+            pass
+        if path is None:
+            candidate = Path(__file__).parent.parent / "data" / "mccmnc.csv"
+            if candidate.exists():
+                path = str(candidate)
+            else:
+                # Legacy repo-root layout (pre-HS-05).
+                path = str(Path(__file__).parent.parent.parent / "data" / "mccmnc.csv")
 
     db_path = Path(path)
     if not db_path.exists():

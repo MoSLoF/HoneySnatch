@@ -35,7 +35,21 @@ def load_oui_database(oui_path: Optional[str] = None) -> int:
     global _oui_db, _loaded
 
     if oui_path is None:
-        oui_path = str(Path(__file__).parent.parent.parent / "data" / "oui.csv")
+        # HS-05: prefer packaged resource, then source-checkout, then legacy.
+        import importlib.resources as _res
+        try:
+            trav = _res.files("honeysnatch.data") / "oui.csv"
+            if trav.is_file():
+                with _res.as_file(trav) as p:
+                    oui_path = str(p)
+        except (ModuleNotFoundError, FileNotFoundError, AttributeError):
+            pass
+        if oui_path is None:
+            candidate = Path(__file__).parent.parent / "data" / "oui.csv"
+            if candidate.exists():
+                oui_path = str(candidate)
+            else:
+                oui_path = str(Path(__file__).parent.parent.parent / "data" / "oui.csv")
 
     path = Path(oui_path)
     if not path.exists():

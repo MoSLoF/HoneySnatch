@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Optional
 
 from honeysnatch.core.models import AccessPoint, Client, ScanSession
+from honeysnatch.db.factory import open_database
 from honeysnatch.db.database import DatabaseManager
 from honeysnatch.utils.logger import get_logger
 
@@ -38,9 +39,19 @@ class SessionManager:
     and correlation capabilities for post-hoc analysis.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, config=None) -> None:
+        """
+        Args:
+            config: :class:`AppConfig` — REQUIRED for production so the
+                loaded SecurityConfig (encrypt_database, audit_enabled)
+                reaches storage. Defaults to None only for backward
+                compatibility with pre-HS-04R callers; when None, the
+                factory constructs AppConfig defaults, which discards the
+                operator's --config selection.
+        """
         self._sessions: dict[str, ScanSession] = {}
         self._db_managers: dict[str, DatabaseManager] = {}
+        self._config = config
 
     def load_session(self, db_path: str) -> Optional[ScanSession]:
         """Load a scan session from a database file.
@@ -52,7 +63,7 @@ class SessionManager:
             The loaded ScanSession, or None if loading fails.
         """
         try:
-            db = DatabaseManager(db_path)
+            db = open_database(db_path, config=self._config)
             sessions = db.list_sessions()
             if not sessions:
                 log.warning("No sessions in %s", db_path)

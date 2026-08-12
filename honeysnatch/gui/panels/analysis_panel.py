@@ -94,7 +94,7 @@ class AnalysisPanel(QWidget):
         """Load a session from a database file."""
         from honeysnatch.analysis.session_manager import SessionManager
 
-        manager = SessionManager()
+        manager = SessionManager(config=self.config)
         session = manager.load_session(db_path)
 
         if session:
@@ -113,7 +113,7 @@ class AnalysisPanel(QWidget):
         directory = QFileDialog.getExistingDirectory(self, "Select Directory")
         if directory:
             from honeysnatch.analysis.session_manager import SessionManager
-            manager = SessionManager()
+            manager = SessionManager(config=self.config)
             sessions = manager.load_directory(directory)
             for session in sessions:
                 self._sessions[session.session_id] = session
@@ -153,7 +153,7 @@ class AnalysisPanel(QWidget):
         session_b = self._sessions[session_ids[idx_b]]
 
         from honeysnatch.analysis.session_manager import SessionManager
-        manager = SessionManager()
+        manager = SessionManager(config=self.config)
         diff = manager.compare_sessions(session_a, session_b)
 
         lines = [

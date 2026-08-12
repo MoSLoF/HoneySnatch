@@ -19,10 +19,61 @@ from __future__ import annotations
 
 import click
 from rich.console import Console
+from honeysnatch.db.factory import open_database
 from rich.table import Table
 from rich.text import Text
 
 console = Console()
+
+
+# Shared consent options (review finding F-04): every live isolation
+# entry point must present either a fresh CLI acknowledgment or a
+# previously-granted persistent token for the target BSSID.
+_target_opt = click.option(
+    "--target-bssid", "-t", default=None,
+    help="BSSID of the network under test (required for non-simulate runs).",
+)
+_ack_opt = click.option(
+    "--i-have-permission-to-attack", "ack_bssid", default=None,
+    metavar="BSSID",
+    help=(
+        "Explicit consent affirmation. Value MUST match --target-bssid. "
+        "Acknowledgment lands in the audit log as evidence of authorization."
+    ),
+)
+
+
+def _gate_or_die(target_bssid, ack_bssid, simulate, **context):
+    """Run the consent gate; convert its exceptions to click aborts.
+
+    Returns an :class:`Authorization` (or None if simulate). HS-02R
+    (v0.1.4): the consent capability is now returned by require_consent
+    as a ConsentReceipt; from_cli_ack requires that receipt, so a
+    caller that bypasses require_consent cannot obtain an Authorization.
+    """
+    from honeysnatch.isolation.consent import (
+        Authorization, ConsentRequiredError, BadBssidError, require_consent,
+    )
+    try:
+        receipt = require_consent(
+            bssid=target_bssid,
+            ack_bssid=ack_bssid,
+            simulate=simulate,
+            context=context,
+        )
+    except (ConsentRequiredError, BadBssidError) as exc:
+        console.print(f"\n[bold red]Refused:[/] {exc}")
+        raise SystemExit(2)
+
+    if simulate:
+        return None
+    # AUTH-01 (v0.1.5): dispatch to the factory that matches the
+    # receipt's source. A CLI-ack receipt goes to from_cli_ack; a
+    # token-derived receipt goes to from_token (where Authorization
+    # will revalidate the on-disk token before every live method).
+    if receipt.source == "token":
+        return Authorization.from_token(target_bssid, receipt)
+    return Authorization.from_cli_ack(target_bssid, receipt)
 
 
 @click.group()
@@ -54,18 +105,25 @@ _simulate_opt = click.option("--simulate", is_flag=True, default=False,
 @_config_opt
 @_server_opt
 @_simulate_opt
+@_target_opt
+@_ack_opt
 @click.option("--second-interface", "-j", default=None,
               help="Second wireless interface (attacker). Defaults to same as --interface.")
-def test_isolation(interface, config, server, simulate, second_interface):
+def test_isolation(interface, config, server, simulate, target_bssid, ack_bssid, second_interface):
     """Run a GTK-shared check (context override / GTK abuse test).
 
     Connects as victim and attacker to the same network and checks
     whether both clients receive the same GTK.  A shared GTK allows
     injection of broadcast Wi-Fi frames containing unicast IP payloads.
     """
+    _authz = _gate_or_die(target_bssid, ack_bssid, simulate,
+                 command="isolation test", interface=interface,
+                 second_interface=second_interface or interface)
+
     from honeysnatch.isolation.runner import IsolationTestRunner
 
     runner = IsolationTestRunner(
+        authorization=_authz,
         interface=interface,
         config_file=config or "",
         server=server,
@@ -95,7 +153,10 @@ def test_isolation(interface, config, server, simulate, second_interface):
 )
 @_server_opt
 @_simulate_opt
-def test_c2c(interface, second_interface, config, mode, server, simulate):
+@_target_opt
+@_ack_opt
+def test_c2c(interface, second_interface, config, mode, server, simulate,
+             target_bssid, ack_bssid):
     """Run client-to-client isolation tests using two interfaces.
 
     \b
@@ -110,9 +171,14 @@ def test_c2c(interface, second_interface, config, mode, server, simulate):
       gw-bounce        Gateway bouncing (MAC=GW but IP=victim)
       bcast-reflect    Broadcast reflection
     """
+    _authz = _gate_or_die(target_bssid, ack_bssid, simulate,
+                 command=f"isolation c2c --mode {mode}",
+                 interface=interface, second_interface=second_interface)
+
     from honeysnatch.isolation.runner import IsolationTestRunner
 
     runner = IsolationTestRunner(
+        authorization=_authz,
         interface=interface,
         config_file=config or "",
         server=server,
@@ -148,7 +214,10 @@ def test_c2c(interface, second_interface, config, mode, server, simulate):
 @click.option("--channel", type=int, default=None,
               help="Set monitor interface to this channel before capture.")
 @_simulate_opt
-def test_c2m(interface, monitor_interface, config, channel, simulate):
+@_target_opt
+@_ack_opt
+def test_c2m(interface, monitor_interface, config, channel, simulate,
+             target_bssid, ack_bssid):
     """Run client-to-monitor isolation test.
 
     Puts ``monitor-interface`` into monitor mode, generates traffic on
@@ -156,6 +225,10 @@ def test_c2m(interface, monitor_interface, config, channel, simulate):
     A positive result indicates the AP/network does not isolate traffic
     at the radio layer.
     """
+    _authz = _gate_or_die(target_bssid, ack_bssid, simulate,
+                 command="isolation c2m", interface=interface,
+                 monitor_interface=monitor_interface)
+
     from honeysnatch.isolation.runner import IsolationTestRunner
 
     if channel:
@@ -167,6 +240,7 @@ def test_c2m(interface, monitor_interface, config, channel, simulate):
             console.print(f"[yellow]Warning: could not set channel: {exc}[/]")
 
     runner = IsolationTestRunner(
+        authorization=_authz,
         interface=interface,
         config_file=config or "",
         simulate=simulate,
@@ -185,17 +259,26 @@ def test_c2m(interface, monitor_interface, config, channel, simulate):
               help="Second wireless interface.")
 @_config_opt
 @_simulate_opt
+@_target_opt
+@_ack_opt
 @click.option("--output-db", default=None,
               help="Path to .db file to persist results.")
-def run_all(interface, second_interface, config, simulate, output_db):
+@click.pass_context
+def run_all(ctx: click.Context, interface, second_interface, config, simulate,
+            target_bssid, ack_bssid, output_db):
     """Run the full isolation test battery and show a summary table.
 
     Tests: GTK check, C2C-IP, C2C-ARP, C2C-broadcast, gateway bounce,
     broadcast reflection, port-steal downlink, port-steal uplink.
     """
+    _authz = _gate_or_die(target_bssid, ack_bssid, simulate,
+                 command="isolation run-all", interface=interface,
+                 second_interface=second_interface)
+
     from honeysnatch.isolation.runner import IsolationTestRunner
 
     runner = IsolationTestRunner(
+        authorization=_authz,
         interface=interface,
         config_file=config or "",
         second_interface=second_interface,
@@ -235,8 +318,7 @@ def run_all(interface, second_interface, config, simulate, output_db):
     # Optionally persist
     if output_db:
         try:
-            from honeysnatch.db.database import DatabaseManager
-            db = DatabaseManager(output_db)
+            db = open_database(output_db, config=ctx.obj.get('config'))
             _persist_isolation_session(db, session)
             console.print(f"\n[green]Results saved to {output_db}[/]")
         except Exception as exc:
@@ -384,3 +466,120 @@ def _persist_isolation_session(db, session) -> None:
             )
             dbs.add(res_rec)
         dbs.commit()
+
+
+# ---------------------------------------------------------------------------
+# fhs isolation consent  — manage persistent consent tokens (F-04)
+# ---------------------------------------------------------------------------
+
+@isolation.group("consent")
+def consent_group():
+    """Manage persistent consent tokens for live isolation testing."""
+    pass
+
+
+@consent_group.command("grant")
+@click.argument("bssid")
+@click.option("--window-minutes", "-w", type=int, default=60, show_default=True,
+              help="Token lifetime in minutes (1-1440).")
+@click.option("--reason", "-r", default="",
+              help="Free-text authorization note (recorded in audit log).")
+def consent_grant(bssid, window_minutes, reason):
+    """Grant a persistent consent token for BSSID.
+
+    Every live isolation command against BSSID within the window will be
+    authorized without the --i-have-permission-to-attack acknowledgment.
+    The grant itself is recorded in the audit log.
+    """
+    from honeysnatch.isolation.consent import (
+        BadBssidError, grant_consent,
+    )
+    from honeysnatch.utils.audit import get_audit_logger
+
+    try:
+        token = grant_consent(bssid, window_minutes=window_minutes, reason=reason)
+    except (BadBssidError, ValueError) as exc:
+        console.print(f"[bold red]Refused:[/] {exc}")
+        raise SystemExit(2)
+
+    get_audit_logger().record(
+        "isolation_consent_granted",
+        {
+            "bssid": token.bssid,
+            "granted_by": token.granted_by,
+            "granted_at": token.granted_at,
+            "expires_at": token.expires_at,
+            "window_minutes": window_minutes,
+            "reason": token.reason,
+        },
+    )
+    console.print(
+        f"[green]Granted consent for [bold]{token.bssid}[/][/] until "
+        f"[bold]{token.expires_at}[/] (by {token.granted_by})."
+    )
+
+
+@consent_group.command("list")
+def consent_list():
+    """List all persistent consent tokens on this host."""
+    from datetime import datetime, timezone
+    from honeysnatch.isolation.consent import _default_store_dir, load_consent
+
+    store = _default_store_dir()
+    if not store.exists():
+        console.print("[dim]No consent tokens on this host.[/]")
+        return
+
+    now = datetime.now(timezone.utc)
+    table = Table(title="Consent Tokens")
+    table.add_column("BSSID")
+    table.add_column("Granted at (UTC)")
+    table.add_column("Expires at (UTC)")
+    table.add_column("Status")
+    table.add_column("Granted by")
+
+    found = 0
+    for f in sorted(store.glob("*.json")):
+        # Reconstruct BSSID from filename (12 hex chars → aa:bb:cc:dd:ee:ff).
+        stem = f.stem
+        if len(stem) != 12:
+            continue
+        bssid = ":".join(stem[i:i+2] for i in range(0, 12, 2))
+        tok = load_consent(bssid)
+        if tok is None:
+            continue
+        found += 1
+        status = "valid" if tok.is_valid_for(bssid, now) else "EXPIRED"
+        style = "green" if status == "valid" else "yellow"
+        table.add_row(tok.bssid, tok.granted_at, tok.expires_at,
+                      Text(status, style=style), tok.granted_by)
+
+    if found == 0:
+        console.print("[dim]No consent tokens on this host.[/]")
+    else:
+        console.print(table)
+
+
+@consent_group.command("revoke")
+@click.argument("bssid")
+def consent_revoke(bssid):
+    """Revoke a persistent consent token by BSSID."""
+    from honeysnatch.isolation.consent import (
+        BadBssidError, canonicalize_bssid, _default_store_dir,
+    )
+    from honeysnatch.utils.audit import get_audit_logger
+
+    try:
+        canonical = canonicalize_bssid(bssid)
+    except BadBssidError as exc:
+        console.print(f"[bold red]Refused:[/] {exc}")
+        raise SystemExit(2)
+
+    path = _default_store_dir() / f"{canonical.replace(':', '')}.json"
+    if not path.exists():
+        console.print(f"[yellow]No token to revoke for {canonical}.[/]")
+        return
+
+    path.unlink()
+    get_audit_logger().record("isolation_consent_revoked", {"bssid": canonical})
+    console.print(f"[green]Revoked consent for {canonical}.[/]")

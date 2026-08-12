@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Optional
 from uuid import uuid4
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
 from honeysnatch.core.models import (
@@ -55,10 +55,20 @@ class DatabaseManager:
         self._encrypted = bool(encryption_key)
 
         if self._encrypted:
+            # F-03 remediation: NEVER interpolate the key into the
+            # engine URL. Characters that URL-parse (`@`, `:`, `/`,
+            # `#`, `?`, `%`) either open the wrong database or, worse,
+            # silently truncate/mis-parse the key into a WEAKER form —
+            # a user who followed best practice and used a long random
+            # passphrase would end up with a weakly-encrypted database
+            # and no error. Applying the key via PRAGMA on every new
+            # connection also keeps it out of DSN reprs, exception
+            # traces, and process listings.
             self.engine = create_engine(
-                f"sqlite+pysqlcipher://:{encryption_key}@/{db_path}",
+                f"sqlite+pysqlcipher:///{db_path}",
                 echo=False,
             )
+            self._install_sqlcipher_pragma(encryption_key)
         else:
             self.engine = create_engine(f"sqlite:///{db_path}", echo=False)
 
@@ -68,6 +78,29 @@ class DatabaseManager:
             "Database initialized: %s%s", db_path,
             " (encrypted)" if self._encrypted else "",
         )
+
+    def _install_sqlcipher_pragma(self, encryption_key: str) -> None:
+        """Attach a `PRAGMA key` handler that runs on every new connection.
+
+        Uses SQLCipher's quoted-literal form so any character in the key
+        is passed through faithfully — single quotes are escaped by
+        doubling, matching SQLite's literal syntax. The key never appears
+        in the engine URL.
+        """
+        escaped = encryption_key.replace("'", "''")
+
+        @event.listens_for(self.engine, "connect")
+        def _set_sqlcipher_key(dbapi_connection, _connection_record):
+            cursor = dbapi_connection.cursor()
+            try:
+                # Quoted-literal form: `PRAGMA key = 'value with any char';`
+                cursor.execute(f"PRAGMA key = '{escaped}';")
+                # Sanity check — a bad key surfaces here rather than on
+                # the first ORM query, which is a much nicer error.
+                cursor.execute("SELECT count(*) FROM sqlite_master;")
+                cursor.fetchall()
+            finally:
+                cursor.close()
 
     def get_session(self) -> Session:
         """Get a new SQLAlchemy session."""

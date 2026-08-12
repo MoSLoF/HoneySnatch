@@ -166,7 +166,10 @@ class LibraryDaemon:
         return cmd
 
     def run(self):
-        subprocess.call(["rm", "-rf", self.ctrl_iface])
+        # F-14: use the safe rmtree wrapper from the sibling daemon module
+        # instead of blind rm -rf on a config-derived path.
+        from honeysnatch.isolation.daemon import _safe_rmtree
+        _safe_rmtree(self.ctrl_iface)
         cmd = self._get_command()
         log(STATUS, "Starting daemon using: " + " ".join(cmd))
 

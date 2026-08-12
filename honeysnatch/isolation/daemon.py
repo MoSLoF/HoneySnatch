@@ -190,9 +190,11 @@ class Daemon:
 
     def start(self) -> None:
         """Start the daemon process and connect to its control interface."""
-        # Clean up stale control interface
-        if os.path.exists(self.ctrl_iface):
-            subprocess.call(["rm", "-rf", self.ctrl_iface])
+        # Clean up stale control interface. Guard against a bad config
+        # value (empty string, `/`, `~`) that could wipe unrelated files —
+        # `rm -rf /` would fire even if the check below let it through
+        # because rm follows symlinks (review finding F-14).
+        _safe_rmtree(self.ctrl_iface)
 
         cmd = self._build_command()
         log(STATUS, "Starting daemon: " + " ".join(cmd))
@@ -214,3 +216,96 @@ class Daemon:
             self.process.terminate()
             self.process.wait()
         self.terminated = True
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+# Every control-interface path this daemon manages MUST resolve as a direct
+# child of one of these roots. This is the reviewer HS-01 remediation for
+# the previous denylist that accepted `../../../etc` (which os.path.abspath
+# resolves to `/etc`, is 4+ chars, and isn't in the small denylist).
+#
+# Allowlist beats denylist here for the same reason it always does: the
+# space of unsafe paths is unbounded; the space of legitimate control-
+# interface locations is small and known.
+_ALLOWED_CTRL_ROOTS = frozenset({
+    "/run/hostapd",
+    "/run/wpa_supplicant",
+    "/var/run/hostapd",
+    "/var/run/wpa_supplicant",
+})
+
+
+def _is_allowed_ctrl_path(candidate: str) -> bool:
+    """Return True iff `candidate` is a valid, safe control-interface path.
+
+    Requirements (all must hold):
+      - Non-empty string.
+      - Contains no traversal segments (`..`) or NUL bytes.
+      - Realpath resolves to a direct child of an approved root.
+      - The parent (post-resolution) is exactly one of the approved roots
+        (not a nested subdir — the daemon only manages one level down).
+      - Neither the path nor its parent is a symlink.
+    """
+    if not candidate or not isinstance(candidate, str):
+        return False
+    if "\x00" in candidate:
+        return False
+    # `..` anywhere in the input is a red flag — reject up-front so we
+    # don't rely on os.path.realpath's normalization to decide safety.
+    parts = candidate.replace("\\", "/").split("/")
+    if any(p == ".." for p in parts):
+        return False
+
+    try:
+        # Use realpath (symlink-following) but ALSO require the parent
+        # to not be a symlink itself — this defeats the attacker-plants-
+        # a-symlink-at-parent case.
+        resolved = os.path.realpath(candidate)
+    except (OSError, ValueError):
+        return False
+
+    parent = os.path.dirname(resolved)
+    if parent not in _ALLOWED_CTRL_ROOTS:
+        return False
+
+    # Neither `resolved` nor `parent` may itself be a symlink — realpath
+    # would have followed them silently.
+    try:
+        if os.path.islink(candidate):
+            return False
+        if os.path.islink(candidate := parent):  # rebind for the check
+            return False
+    except OSError:
+        return False
+
+    # Reject bare roots and empty leaf names.
+    leaf = os.path.basename(resolved)
+    if not leaf or leaf in (".", ".."):
+        return False
+
+    return True
+
+
+def _safe_rmtree(path: str) -> None:
+    """Delete a control-interface directory tree, refusing anything else.
+
+    Review finding HS-01 (Critical, v0.1.1). Prior denylist implementation
+    was defeated by `../../../etc` normalizing to `/etc`. Now:
+      - Allowlist-only: the path MUST resolve as a direct child of
+        /run/{hostapd,wpa_supplicant} (or /var/run/... aliases).
+      - Path or parent symlinks are refused.
+      - Removal happens against the ORIGINAL path (post-check), not
+        against `realpath` — so a bind-mount or race can't redirect us
+        after validation.
+    Non-conforming paths are logged and ignored.
+    """
+    import shutil
+    if not _is_allowed_ctrl_path(path):
+        log(STATUS, f"_safe_rmtree: refused non-conforming path {path!r}")
+        return
+    if not os.path.exists(path):
+        return
+    shutil.rmtree(path, ignore_errors=True)

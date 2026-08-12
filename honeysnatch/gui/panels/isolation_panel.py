@@ -1,7 +1,16 @@
-"""Client Isolation Testing panel for the honeysnatch GUI."""
+"""Client Isolation Testing panel for the honeysnatch GUI.
+
+CONSENT (review finding HS-02):
+The panel collects a target BSSID and an explicit "I have permission
+to attack" checkbox, and constructs the runner with a matching
+:class:`Authorization`. Without both, only Simulate mode is enabled.
+The runner-level gate is the enforcement point; this UI just makes it
+easy for an authorized operator to supply what the gate needs.
+"""
 from __future__ import annotations
 
 from PyQt6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QGroupBox,
     QHBoxLayout,
@@ -70,6 +79,26 @@ class IsolationPanel(QWidget):
         row2.addWidget(self.server_edit)
         config_layout.addLayout(row2)
 
+        # Consent row (HS-02): target BSSID + explicit ack + simulate toggle.
+        # Live tests refuse to run unless (BSSID valid AND ack checked) OR
+        # simulate is on. The runner re-enforces this — see
+        # honeysnatch/isolation/runner.py::_gate_live_run.
+        row_consent = QHBoxLayout()
+        row_consent.addWidget(QLabel("Target BSSID:"))
+        self.target_bssid_edit = QLineEdit()
+        self.target_bssid_edit.setPlaceholderText("AA:BB:CC:DD:EE:FF")
+        self.target_bssid_edit.setMaximumWidth(180)
+        row_consent.addWidget(self.target_bssid_edit)
+        self.ack_checkbox = QCheckBox(
+            "I have permission to test this BSSID (logged as consent evidence)"
+        )
+        row_consent.addWidget(self.ack_checkbox)
+        row_consent.addStretch()
+        self.simulate_checkbox = QCheckBox("Simulate (no on-air packets)")
+        self.simulate_checkbox.setChecked(True)  # safe default in the GUI
+        row_consent.addWidget(self.simulate_checkbox)
+        config_layout.addLayout(row_consent)
+
         row3 = QHBoxLayout()
         row3.addWidget(QLabel("Test:"))
         self.test_combo = QComboBox()
@@ -129,6 +158,45 @@ class IsolationPanel(QWidget):
             self.log_output.append("Error: No interface specified")
             return
 
+        # HS-02: build an Authorization for the runner. Simulate mode
+        # doesn't need one; live tests need (valid BSSID + ack).
+        simulate = self.simulate_checkbox.isChecked()
+        authz = None
+        target_bssid = self.target_bssid_edit.text().strip()
+        if not simulate:
+            from honeysnatch.isolation.consent import (
+                Authorization,
+                BadBssidError,
+                ConsentRequiredError,
+                require_consent,
+            )
+            if not target_bssid:
+                self.log_output.append(
+                    "Refused: live tests require a Target BSSID. "
+                    "Enter one and check 'I have permission…', or enable Simulate."
+                )
+                return
+            if not self.ack_checkbox.isChecked():
+                self.log_output.append(
+                    f"Refused: live tests require the 'I have permission' checkbox. "
+                    f"Target: {target_bssid}"
+                )
+                return
+            try:
+                # HS-02R (v0.1.4): require_consent returns the receipt
+                # that from_cli_ack must consume — no receipt, no live
+                # authorization.
+                receipt = require_consent(
+                    bssid=target_bssid,
+                    ack_bssid=target_bssid,
+                    simulate=False,
+                    context={"command": "gui:isolation", "interface": iface},
+                )
+                authz = Authorization.from_cli_ack(target_bssid, receipt)
+            except (ConsentRequiredError, BadBssidError) as exc:
+                self.log_output.append(f"Refused: {exc}")
+                return
+
         self.start_btn.setEnabled(False)
         self.stop_btn.setEnabled(True)
         test_name = self.test_combo.currentText()
@@ -138,6 +206,8 @@ class IsolationPanel(QWidget):
         self._runner = IsolationTestRunner(
             interface=iface,
             config_file=self.config_edit.text().strip(),
+            simulate=simulate,
+            authorization=authz,
         )
 
         second_iface = self.iface2_edit.text().strip()

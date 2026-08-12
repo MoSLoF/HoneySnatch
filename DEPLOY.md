@@ -96,6 +96,31 @@ sudo bash deploy-hackberrypi.sh --skip-hostap
 
 ---
 
+## Capabilities (running without sudo)
+
+Wireless scanning requires `CAP_NET_RAW` and `CAP_NET_ADMIN`. The obvious
+`sudo setcap … $(which python3)` recipe is **incorrect** — it grants
+network-raw capability to every Python process on the box for every user.
+Use the scoped helper instead, which copies the venv's Python interpreter
+to `.venv/bin/python-net`, applies setcap to that copy only, and leaves
+the system Python untouched:
+
+```bash
+source ~/honeysnatch/.venv/bin/activate
+sudo ~/honeysnatch/bin/grant-capabilities.sh
+# then run scans through the elevated interpreter:
+.venv/bin/python-net -m honeysnatch scan start -i wlan1mon
+```
+
+To revoke, just `rm .venv/bin/python-net`. Deleting the venv also removes
+the elevated binary — no lingering system-wide capability. See
+`bin/grant-capabilities.sh` for the full rationale.
+
+If you'd rather keep using `sudo`, that's also fine — every `sudo fhs …`
+example in this guide works unchanged.
+
+---
+
 ## First Use
 
 ```bash

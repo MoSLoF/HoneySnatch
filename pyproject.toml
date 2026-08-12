@@ -4,7 +4,7 @@ build-backend = "setuptools.backends._legacy:_Backend"
 
 [project]
 name = "honeysnatch"
-version = "0.1.0"
+version = "0.1.8"
 description = "honeysnatch - Wireless Discovery, Assessment & Isolation Testing Suite"
 readme = "README.md"
 license = {text = "MIT"}
@@ -101,9 +101,12 @@ encrypted_db = [
     "sqlcipher3>=0.5.0",
 ]
 
-# Install everything (for development / full deployment)
+# Install everything (for development / full deployment).
+# HS-05: encrypted_db must be included so `pip install honeysnatch[all]`
+# gives operators the SQLCipher driver they need if they enable
+# security.encrypt_database.
 all = [
-    "honeysnatch[gui,gps,bluetooth,cellular,imu]",
+    "honeysnatch[gui,gps,bluetooth,cellular,imu,encrypted_db]",
 ]
 
 # Development & test tooling
@@ -139,6 +142,30 @@ Documentation = "https://github.com/MoSLoF/honeysnatch/wiki"
 # ---------------------------------------------------------------------------
 [tool.setuptools.packages.find]
 include = ["honeysnatch*"]
+
+# HS-05: ship the isolation configs and reference data inside the wheel
+# so a pip install is a working install. The vendored hostap trees are
+# NOT packaged — they're delivered as a separate system component (see
+# DEPLOY.md); an installed wheel that can't find hostap disables the
+# live-isolation commands with a clear diagnostic rather than pretending
+# to work. Reference tables (mccmnc, oui) DO get packaged — they're
+# small and needed at runtime for carrier/vendor identification.
+[tool.setuptools.package-data]
+"honeysnatch" = [
+    "data/isolation/*.conf",
+    "data/*.csv",
+    "data/default_config.yaml",
+    # TM-02 (v0.1.7): ship the controlling security documents inside the
+    # wheel so an operator who pip-installs honeysnatch has THREAT_MODEL.md
+    # locally. The canonical copies live at repo root (visible on GitHub);
+    # `tests/test_security_docs_in_wheel.py` enforces byte-identity between
+    # the two locations.
+    "data/security/*.md",
+]
+
+# Mirror the same list via MANIFEST.in-equivalent so sdist ships them too.
+[tool.setuptools]
+include-package-data = true
 
 # ---------------------------------------------------------------------------
 # pytest

@@ -120,3 +120,90 @@ class TestHmacKey:
         assert os.path.exists(key_path)
         loaded = bytes.fromhex(open(key_path).read().strip())
         assert loaded == key
+
+
+class TestHmacKeyPermissions:
+    """Review findings F-05, F-06, F-08."""
+
+    def test_new_key_has_0600_from_start_no_race(self, tmp_path):
+        """F-05: no world-readable window between create and chmod."""
+        import stat
+        if os.name == "nt":
+            pytest.skip("POSIX perm check")
+        key_path = tmp_path / "hmac.key"
+        get_or_create_hmac_key(str(key_path))
+        mode = stat.S_IMODE(key_path.stat().st_mode)
+        assert mode == 0o600, f"expected 0600, got {oct(mode)}"
+
+    def test_symlink_at_key_path_is_refused(self, tmp_path):
+        """F-06: pre-existing symlink at key_path must NOT get the fresh key."""
+        if os.name == "nt":
+            pytest.skip("POSIX symlink")
+        victim = tmp_path / "attacker-owned.txt"
+        victim.write_text("original")
+        key_path = tmp_path / "hmac.key"
+        os.symlink(str(victim), str(key_path))
+
+        # Should refuse to follow the symlink; nothing gets written to victim.
+        with pytest.raises(OSError):
+            get_or_create_hmac_key(str(key_path))
+        assert victim.read_text() == "original", \
+            "F-06 regression: key was written through a symlink"
+
+
+class TestEncryptedHeaderAuthenticated:
+    """Review finding F-07: header (MAGIC + salt + nonce) must be AAD."""
+
+    def test_header_tamper_fails_decrypt(self, tmp_path):
+        from cryptography.exceptions import InvalidTag
+        from honeysnatch.utils.crypto import decrypt_file, encrypt_file
+
+        src = tmp_path / "plain.txt"
+        enc = tmp_path / "enc.fhs"
+        dst = tmp_path / "out.txt"
+        src.write_bytes(b"secret data")
+
+        encrypt_file(str(src), str(enc), "correct horse battery staple")
+
+        # Corrupt one byte of the salt (offset 4..20). Nothing else changes.
+        raw = bytearray(enc.read_bytes())
+        raw[4] ^= 0x01
+        enc.write_bytes(bytes(raw))
+
+        with pytest.raises(InvalidTag):
+            decrypt_file(str(enc), str(dst), "correct horse battery staple")
+
+    def test_valid_roundtrip_still_works(self, tmp_path):
+        from honeysnatch.utils.crypto import decrypt_file, encrypt_file
+
+        src = tmp_path / "p.txt"
+        enc = tmp_path / "e.fhs"
+        dst = tmp_path / "o.txt"
+        payload = b"the quick brown fox\x00\xff\n" * 100
+        src.write_bytes(payload)
+
+        encrypt_file(str(src), str(enc), "pw")
+        decrypt_file(str(enc), str(dst), "pw")
+        assert dst.read_bytes() == payload
+
+
+class TestIsEncryptedFileTristate:
+    """Review finding F-13: distinguish 'not encrypted' from 'cannot read'."""
+
+    def test_encrypted_returns_true(self, tmp_path):
+        from honeysnatch.utils.crypto import encrypt_file, is_encrypted_file
+        src = tmp_path / "p"; src.write_bytes(b"x")
+        enc = tmp_path / "e"
+        encrypt_file(str(src), str(enc), "pw")
+        assert is_encrypted_file(str(enc)) is True
+
+    def test_plaintext_returns_false(self, tmp_path):
+        from honeysnatch.utils.crypto import is_encrypted_file
+        p = tmp_path / "plain"; p.write_bytes(b"hello")
+        assert is_encrypted_file(str(p)) is False
+
+    def test_unreadable_returns_none(self, tmp_path):
+        from honeysnatch.utils.crypto import is_encrypted_file
+        # File does not exist — indistinguishable from permission denied
+        # at this API level, both are "cannot read".
+        assert is_encrypted_file(str(tmp_path / "missing")) is None

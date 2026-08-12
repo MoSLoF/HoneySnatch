@@ -161,9 +161,12 @@ A clean install produces output like:
   PASS  __version__
   ...
 ==================================================
-  SMOKE TEST: 97 passed, 0 failed
+  SMOKE TEST: 191 passed, 0 failed
 ==================================================
 ```
+
+The count is asserted by the test runner — a passing smoke run at this
+version is exactly 191 checks. Documentation drift is caught by CI.
 
 ---
 
@@ -324,4 +327,5 @@ MIT — see [LICENSE](LICENSE)
 - **HackberryPi CM5 deployment:** [DEPLOY.md](DEPLOY.md)
 - **AirSnitch paper:** Mathy Vanhoef, NDSS 2026 — https://papers.mathyvanhoef.com/ndss2026-airsnitch.pdf
 - **Security policy:** [SECURITY.md](SECURITY.md)
+- **Threat model:** [THREAT_MODEL.md](THREAT_MODEL.md) — trusted-process boundary declaration (TB-01). **Read this before deploying `fhs` in any environment that runs third-party Python code in-process.**
 - **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)

@@ -1,17 +1,22 @@
 name: CI
 
+# Actions SHA-pinned (review finding F-09). Do NOT change the SHA
+# without also updating the # v-tag comment for auditability.
 on:
   push:
     branches: [main, master]
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: "3.12"
       - run: pip install ruff
@@ -21,8 +26,8 @@ jobs:
   typecheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
@@ -31,12 +36,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev]"
-      - run: python -m pytest tests/ -v --ignore=tests/core/test_packet_parser.py --cov=honeysnatch --cov-report=term-missing
+      # F-12 remediation: previously ran with --ignore=tests/core/test_packet_parser.py,
+      # which meant the core-parser test suite never gated merges. All tests now
+      # run; if hardware-required tests remain, they should be marked with
+      # `@pytest.mark.hardware` and explicitly excluded, not silently ignored here.
+      - run: python -m pytest tests/ -v --cov=honeysnatch --cov-report=term-missing

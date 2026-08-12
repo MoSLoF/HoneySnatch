@@ -47,19 +47,27 @@ def generate_html_report(
     aps_sorted = sorted(session.access_points.values(), key=lambda a: a.rssi, reverse=True)
     clients_sorted = sorted(session.clients.values(), key=lambda c: c.rssi, reverse=True)
 
+    # Review finding HS-07: every attacker-controlled field (SSID,
+    # vendor, probe-request, evil-twin reason) is escaped via
+    # html.escape before it reaches the HTML template. A crafted beacon
+    # or probe with `<script>` etc. cannot inject markup into a report
+    # opened in an analyst's browser.
+    from html import escape as _e
+
     # Build AP table rows
     ap_rows = ""
     for ap in aps_sorted:
         score = profiles.security_score(ap)
         score_class = "good" if score >= 70 else "warn" if score >= 40 else "bad"
+        ssid_disp = _e(ap.ssid) if ap.ssid else "<em>[Hidden]</em>"  # bracketed literal is safe
         ap_rows += f"""
         <tr>
-            <td class="mono">{ap.bssid}</td>
-            <td>{ap.ssid or '<em>[Hidden]</em>'}</td>
+            <td class="mono">{_e(ap.bssid)}</td>
+            <td>{ssid_disp}</td>
             <td>{ap.channel}</td>
             <td>{ap.rssi} dBm</td>
-            <td class="enc-{ap.encryption.value.lower().replace('-', '').replace(' ', '')}">{ap.encryption.value}</td>
-            <td>{ap.vendor or '-'}</td>
+            <td class="enc-{_e(ap.encryption.value.lower().replace('-', '').replace(' ', ''))}">{_e(ap.encryption.value)}</td>
+            <td>{_e(ap.vendor) if ap.vendor else '-'}</td>
             <td>{len(ap.clients)}</td>
             <td class="{score_class}">{score}</td>
         </tr>"""
@@ -67,15 +75,16 @@ def generate_html_report(
     # Build client table rows
     client_rows = ""
     for cl in clients_sorted:
-        probes = ", ".join(cl.probe_requests[:5])
+        probes_list = [_e(p) for p in cl.probe_requests[:5]]
+        probes = ", ".join(probes_list)
         if len(cl.probe_requests) > 5:
             probes += f" (+{len(cl.probe_requests) - 5})"
         client_rows += f"""
         <tr>
-            <td class="mono">{cl.mac}</td>
-            <td class="mono">{cl.bssid or '-'}</td>
+            <td class="mono">{_e(cl.mac)}</td>
+            <td class="mono">{_e(cl.bssid) if cl.bssid else '-'}</td>
             <td>{cl.rssi} dBm</td>
-            <td>{cl.vendor or '-'}</td>
+            <td>{_e(cl.vendor) if cl.vendor else '-'}</td>
             <td>{probes or '-'}</td>
             <td>{cl.data_count}</td>
         </tr>"""
@@ -85,14 +94,17 @@ def generate_html_report(
     if evil_twins:
         evil_twin_html = '<div class="alert">'
         for et in evil_twins:
-            evil_twin_html += f'<p><strong>Potential Evil Twin:</strong> SSID "{et["ssid"]}" - {et["reason"]}</p>'
+            evil_twin_html += (
+                f'<p><strong>Potential Evil Twin:</strong> '
+                f'SSID "{_e(str(et["ssid"]))}" - {_e(str(et["reason"]))}</p>'
+            )
         evil_twin_html += '</div>'
 
     html = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>honeysnatch Report - {session.name}</title>
+    <title>honeysnatch Report - {_e(session.name)}</title>
     <style>
         body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a2e; color: #eee; }}
@@ -142,9 +154,9 @@ def generate_html_report(
 
     <h2>Session Details</h2>
     <table>
-        <tr><td><strong>Name</strong></td><td>{session.name}</td></tr>
+        <tr><td><strong>Name</strong></td><td>{_e(session.name)}</td></tr>
         <tr><td><strong>Session ID</strong></td><td class="mono">{session.session_id}</td></tr>
-        <tr><td><strong>Interface</strong></td><td>{session.interface}</td></tr>
+        <tr><td><strong>Interface</strong></td><td>{_e(session.interface)}</td></tr>
         <tr><td><strong>Start</strong></td><td>{session.start_time}</td></tr>
         <tr><td><strong>End</strong></td><td>{session.end_time or 'In progress'}</td></tr>
     </table>

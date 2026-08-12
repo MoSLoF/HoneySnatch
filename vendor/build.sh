@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# HS-08: anchor to this script's directory so we work regardless of the
+# caller's CWD. deploy-hackberrypi.sh, `fhs isolation build`, and manual
+# invocations from repo root now all behave identically.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
+
 # Usage.
 if [[ $# -gt 1 ]] ; then
     echo "Usage; $0 [directory]"
@@ -13,7 +19,7 @@ CUSTOM_CONFIG=true
 
 # Sanity checks.
 if [ ! -d "$HOSTAP" ] ; then
-	echo "Directory $HOSTAP not found!"
+	echo "Directory $HOSTAP not found (looked in $SCRIPT_DIR)"
 	exit 1
 fi
 

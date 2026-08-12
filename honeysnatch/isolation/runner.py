@@ -3,11 +3,31 @@
 Orchestrates AirSnitch-style isolation attacks using the wpa_supplicant
 control interface via the Supplicant / Daemon classes.
 
+CONSENT BOUNDARY (review finding HS-02):
+The runner is the SHARED live-execution boundary for the CLI, the GUI,
+and any programmatic caller. Every `run_*` method that touches on-air
+traffic checks `_gate_live_run()` before doing hardware/subprocess/scapy
+work. That gate consults an :class:`Authorization` attached to the
+runner instance. Callers construct the runner in exactly one of three
+authorized states:
+
+  - `simulate=True`  → dry-run, no on-air packets, no consent needed
+  - `authorization=Authorization.from_cli_ack(bssid)` → CLI already ran
+                       `require_consent()` and passed
+  - `authorization=Authorization.from_token(bssid)` → a valid persistent
+                       consent token exists
+
+Constructing the runner without one of those (i.e. `simulate=False`
+with no `authorization`) makes every subsequent `run_*` call raise
+:class:`ConsentRequiredError` — this is what defeats the earlier GUI
+bypass that instantiated `IsolationTestRunner(simulate=False)` directly.
+
 Each ``run_*`` method:
-  1. Starts wpa_supplicant on the victim interface (and attacker if needed).
-  2. Waits for association and key exchange.
-  3. Executes the specific attack sequence.
-  4. Returns a concrete AttackResult — never INCONCLUSIVE unless the
+  1. Verifies consent via `_gate_live_run()`.
+  2. Starts wpa_supplicant on the victim interface (and attacker if needed).
+  3. Waits for association and key exchange.
+  4. Executes the specific attack sequence.
+  5. Returns a concrete AttackResult — never INCONCLUSIVE unless the
      underlying precondition genuinely cannot be met (e.g. no GTK).
 
 Prerequisites (hardware path):
@@ -40,6 +60,10 @@ from honeysnatch.isolation.attacks.base import (
     AttackOutcome,
     AttackResult,
     AttackType,
+)
+from honeysnatch.isolation.consent import (
+    Authorization,
+    ConsentRequiredError,
 )
 from honeysnatch.isolation.models import IsolationTestSession
 from honeysnatch.isolation.config import (
@@ -85,6 +109,7 @@ class IsolationTestRunner:
         config_file: str = "",
         config: Optional[IsolationConfig] = None,
         simulate: bool = False,
+        authorization: Optional[Authorization] = None,
         **kwargs,
     ) -> None:
         self.interface = interface
@@ -93,12 +118,73 @@ class IsolationTestRunner:
             self.config_file = find_default_config("supplicant") or ""
         self.config = config or IsolationConfig()
         self.simulate = simulate
+        # HS-02 remediation: the runner NOW carries an authorization
+        # object. `simulate=True` neutralizes the check (no on-air work
+        # happens); every other construction requires a valid
+        # Authorization or every `run_*` call raises.
+        self._authorization = authorization
         self.options = kwargs
         self.session: Optional[IsolationTestSession] = None
 
         # Resolve server / second_interface from kwargs for convenience
         self._server: str = kwargs.get("server", self.config.default_server)
         self._second_iface: str = kwargs.get("second_interface", "")
+
+    def _gate_live_run(self, attack_label: str = "") -> None:
+        """Refuse any on-air run without valid consent (review HS-02).
+
+        Called at the top of every `run_*` method. `simulate=True`
+        constructors bypass; every other path must have set a valid
+        `authorization` at construction time. HS-02R strengthened this
+        with an unforgeable receipt check — see
+        ``Authorization.is_valid()`` and ``_MINTED_RECEIPTS``.
+        """
+        if self.simulate:
+            return
+        if self._authorization is None or not self._authorization.is_valid():
+            raise ConsentRequiredError(
+                f"Live isolation run ({attack_label or 'unknown'}) refused: "
+                "no valid authorization on the runner (missing or forged "
+                "receipt). Construct with simulate=True for a dry-run, OR "
+                "obtain an authorization by first calling "
+                "`honeysnatch.isolation.consent.require_consent()` and then "
+                "`Authorization.from_cli_ack(bssid)` / `.from_token(bssid)`."
+            )
+
+    def _verify_observed_target(self, observed_bssid: str, attack_label: str = "") -> None:
+        """HS-02R: refuse to proceed if the associated BSSID isn't the one
+        the operator authorized.
+
+        MUST be called from every `run_*` method AFTER wpa_supplicant
+        reports association and BEFORE any injection / capture / probe.
+        On mismatch, records an audit event with both BSSIDs and raises
+        so no on-air work happens.
+        """
+        if self.simulate:
+            return  # no on-air work in simulation
+        if self._authorization is None:
+            # _gate_live_run already refused; belt-and-braces.
+            raise ConsentRequiredError(
+                "_verify_observed_target called without authorization"
+            )
+        if not self._authorization.matches_observed_bssid(observed_bssid):
+            from honeysnatch.utils.audit import get_audit_logger
+            try:
+                get_audit_logger().record(
+                    "isolation_bssid_mismatch",
+                    {
+                        "attack": attack_label,
+                        "authorized_bssid": self._authorization.bssid,
+                        "observed_bssid": observed_bssid,
+                    },
+                )
+            except Exception:
+                pass
+            raise ConsentRequiredError(
+                f"Refused: authorized BSSID {self._authorization.bssid} "
+                f"does not match observed BSSID {observed_bssid}. "
+                "No attack packets were emitted."
+            )
 
     # ------------------------------------------------------------------
     # Session helpers
@@ -133,6 +219,7 @@ class IsolationTestRunner:
           - SECURE      → GTK values differ
           - INCONCLUSIVE → could not extract key (no hostap binary / simulation)
         """
+        self._gate_live_run('GTK check')
         iface2 = second_interface or self._second_iface or self.interface
 
         if self.simulate:
@@ -165,7 +252,9 @@ class IsolationTestRunner:
 
         try:
             info1 = sup1.start_and_connect()
+            self._verify_observed_target(info1.bssid, attack_label="live-isolation")
             info2 = sup2.start_and_connect()
+            self._verify_observed_target(info2.bssid, attack_label="live-isolation-secondary")
 
             result = check_gtk_shared(
                 victim_gtk=info1.gtk,
@@ -207,6 +296,7 @@ class IsolationTestRunner:
             ``"ip"``        – IP ping / TCP SYN to victim IP
             ``"broadcast"`` – Broadcast frame containing unicast IP payload
         """
+        self._gate_live_run('C2C')
         iface2 = second_interface or self._second_iface
 
         if self.simulate:
@@ -253,7 +343,9 @@ class IsolationTestRunner:
 
         try:
             info_v = sup_victim.start_and_connect()
+            self._verify_observed_target(info_v.bssid, attack_label="live-isolation")
             info_a = sup_attacker.start_and_connect()
+            self._verify_observed_target(info_a.bssid, attack_label="live-isolation-secondary")
 
             victim_ip  = info_v.ip
             victim_mac = info_v.mac
@@ -339,6 +431,7 @@ class IsolationTestRunner:
         while the victim sends traffic.  If frames are captured the network
         fails to isolate the PHY layer.
         """
+        self._gate_live_run('C2M')
         if self.simulate:
             return AttackResult(
                 attack_type=AttackType.CLIENT_TO_MONITOR,
@@ -382,6 +475,7 @@ class IsolationTestRunner:
 
         try:
             info = sup.start_and_connect()
+            self._verify_observed_target(info.bssid, attack_label="live-c2m")
             victim_ip  = info.ip
             victim_mac = info.mac
 
@@ -444,6 +538,7 @@ class IsolationTestRunner:
 
         Reference: Vanhoef NDSS'26 §4 — Port Stealing.
         """
+        self._gate_live_run('port-steal')
         iface2 = second_interface or self._second_iface
         attype = AttackType.PORT_STEAL_UPLINK if direction == "uplink" \
                  else AttackType.PORT_STEAL_DOWNLINK
@@ -498,7 +593,9 @@ class IsolationTestRunner:
 
         try:
             info_v = sup_victim.start_and_connect()
+            self._verify_observed_target(info_v.bssid, attack_label="live-isolation")
             info_a = sup_attacker.start_and_connect()
+            self._verify_observed_target(info_a.bssid, attack_label="live-isolation-secondary")
 
             victim_ip  = info_v.ip
             victim_mac = info_v.mac
@@ -605,6 +702,7 @@ class IsolationTestRunner:
 
         Reference: Vanhoef NDSS'26 §3 — Gateway Bouncing.
         """
+        self._gate_live_run('gateway-bounce')
         iface2 = second_interface or self._second_iface
 
         if self.simulate:
@@ -647,7 +745,9 @@ class IsolationTestRunner:
 
         try:
             info_v = sup_victim.start_and_connect()
+            self._verify_observed_target(info_v.bssid, attack_label="live-isolation")
             info_a = sup_attacker.start_and_connect()
+            self._verify_observed_target(info_a.bssid, attack_label="live-isolation-secondary")
 
             victim_ip  = info_v.ip
             victim_mac = info_v.mac
@@ -710,6 +810,7 @@ class IsolationTestRunner:
         on the victim interface.  If the victim receives the broadcast,
         client isolation does not filter intra-BSS broadcasts.
         """
+        self._gate_live_run('broadcast-reflection')
         iface2 = second_interface or self._second_iface
 
         if self.simulate:
@@ -756,7 +857,9 @@ class IsolationTestRunner:
 
         try:
             info_v = sup_victim.start_and_connect()
+            self._verify_observed_target(info_v.bssid, attack_label="live-isolation")
             info_a = sup_attacker.start_and_connect()
+            self._verify_observed_target(info_a.bssid, attack_label="live-isolation-secondary")
 
             received = threading.Event()
 
@@ -822,6 +925,7 @@ class IsolationTestRunner:
         The session can be persisted to the database via
         :meth:`~honeysnatch.db.database.DatabaseManager.save_isolation_session`.
         """
+        self._gate_live_run('run-all')
         iface2 = second_interface or self._second_iface
         session = self._new_session("full-isolation-test")
         session.second_interface = iface2

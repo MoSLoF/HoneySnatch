@@ -81,8 +81,12 @@ def check_permissions() -> PermissionStatus:
             missing.append("CAP_NET_ADMIN")
         status.message = (
             f"Missing capabilities: {', '.join(missing)}. "
-            "Run as root or grant capabilities: "
-            "sudo setcap cap_net_raw,cap_net_admin=eip $(which python3)"
+            "Run under sudo, OR grant capabilities to a DEDICATED interpreter — "
+            "do NOT setcap the system Python (that grants every Python process "
+            "on the host, for every user, network-raw access). Recommended: "
+            "run `bin/grant-capabilities.sh` which copies the current venv "
+            "python to `.venv/bin/python-net`, applies setcap to that copy "
+            "only, and points `fhs` at it. See DEPLOY.md §Capabilities."
         )
 
     return status
