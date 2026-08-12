@@ -9,6 +9,6 @@ A comprehensive wireless security assessment tool suite providing:
 - BlueScout: Passive Bluetooth scanning
 """
 
-__version__ = "0.1.8"
+__version__ = "0.1.9"
 __app_name__ = "honeysnatch"
 __cli_name__ = "fhs"

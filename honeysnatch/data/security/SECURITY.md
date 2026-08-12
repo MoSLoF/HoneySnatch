@@ -4,7 +4,8 @@
 
 | Version | Supported          |
 |---------|--------------------|
-| 0.1.8   | :white_check_mark: |
+| 0.1.9   | :white_check_mark: |
+| 0.1.8   | :x: (upgrade — CI build-backend fix) |
 | 0.1.7   | :x: (upgrade — DOC-02 doc-only version-neutralization) |
 | 0.1.6   | :x: (upgrade — TM-01, RE-02, DL-01, TM-02 release-hygiene fixes) |
 | 0.1.5   | :x: (upgrade — TB-01 threat-model declaration + DOC-01 duplicate) |
@@ -13,6 +14,37 @@
 | 0.1.2   | :x: (upgrade — three Highs + one Moderate runtime regression) |
 | 0.1.1   | :x: (upgrade — Critical HS-01, four Highs) |
 | 0.1.0   | :x: (upgrade)      |
+
+## v0.1.9 hardening summary
+
+CI-only fix on top of v0.1.8. `pyproject.toml`'s `build-backend`
+value was `"setuptools.backends._legacy:_Backend"` — that module
+path doesn't exist in setuptools. `pip install -e ".[dev]"`
+therefore failed with `BackendUnavailable: Cannot import
+'setuptools.backends._legacy'` under PEP 517 build backend
+resolution, which is what CI does. The sandbox validation for
+v0.1.5-v0.1.8 used `python -m pytest` directly (which doesn't
+exercise PEP 517), so the bug shipped through four rounds without
+tripping any local test.
+
+Fix: `build-backend = "setuptools.build_meta"` — the correct
+setuptools backend name. Verified by building an editable wheel
+in a clean venv and running the full pytest + smoke suite against
+the installed package.
+
+No application code changed. Zero delta to the trusted-process
+threat model, the consent gate, the audit chain, or any attack-
+path module.
+
+### Test posture
+
+**372 pytest passing** (same as v0.1.8, all now runnable through
+`pip install -e ".[dev]"`), 3 skipped, 0 failing. Smoke: 191/191.
+
+### Still outstanding
+
+Same list as v0.1.8, with **RE-01** now genuinely unblocked (the
+v0.1.9 CI can actually reach the test step for the first time).
 
 ## v0.1.8 hardening summary
 

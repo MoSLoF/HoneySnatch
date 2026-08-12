@@ -5,6 +5,23 @@ All notable changes to honeysnatch will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.9] - 2026-08-12
+
+### Fixed
+
+- **Build backend name** — `pyproject.toml` had
+  `build-backend = "setuptools.backends._legacy:_Backend"`, a
+  module path that doesn't exist in setuptools. `pip install -e`
+  failed at PEP 517 build-backend resolution. Corrected to
+  `setuptools.build_meta`. Verified in a clean venv build +
+  install + full test run.
+
+### Test posture
+
+- 372 pytest passing, 3 skipped, 0 failing.
+- 191/191 smoke.
+- All now runnable via `pip install -e ".[dev]"` (CI-reproducible).
+
 ## [0.1.8] - 2026-08-12
 
 ### Changed

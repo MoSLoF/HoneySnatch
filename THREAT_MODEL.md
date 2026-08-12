@@ -1,6 +1,6 @@
 # HoneySnatch Threat Model
 
-**Version:** 0.1.8
+**Version:** 0.1.9
 **Status:** Trusted-process boundary declared (TB-01, v0.1.5 follow-up review)
 **Companion:** `SECURITY.md`
 
@@ -180,6 +180,10 @@ code should either:
 
 ## Change log
 
+- **v0.1.9** — Build-system fix (`build-backend` corrected to
+  `setuptools.build_meta`). No content change to the boundary; CI
+  fix only, restores `pip install -e ".[dev]"` reproducibility that
+  the trusted-process model's dependency prerequisite depends on.
 - **v0.1.8** — Version-neutral wording in deployment prerequisite #1
   (DOC-02, v0.1.7 review). Content unchanged.
 - **v0.1.7** — Reframed prerequisite #2 to accurately describe the

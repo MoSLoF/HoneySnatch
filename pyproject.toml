@@ -1,10 +1,10 @@
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
-build-backend = "setuptools.backends._legacy:_Backend"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "honeysnatch"
-version = "0.1.8"
+version = "0.1.9"
 description = "honeysnatch - Wireless Discovery, Assessment & Isolation Testing Suite"
 readme = "README.md"
 license = {text = "MIT"}
