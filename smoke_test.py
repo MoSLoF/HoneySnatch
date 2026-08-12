@@ -27,7 +27,7 @@ def check(name, fn):
 print("=== 1. Core Imports ===")
 import honeysnatch
 check("__app_name__", lambda: assert_eq(honeysnatch.__app_name__, "honeysnatch"))
-check("__version__", lambda: assert_eq(honeysnatch.__version__, "0.1.9"))
+check("__version__", lambda: assert_eq(honeysnatch.__version__, "0.1.10"))
 check("core.models", lambda: __import__("honeysnatch.core.models"))
 check("db.schema", lambda: __import__("honeysnatch.db.schema"))
 check("db.database", lambda: __import__("honeysnatch.db.database"))
@@ -249,7 +249,7 @@ from honeysnatch.cli.main import cli
 cli_runner = CliRunner()
 
 result_ver = cli_runner.invoke(cli, ["--version"])
-check("fhs --version", lambda: assert_eq("0.1.9" in result_ver.output, True))
+check("fhs --version", lambda: assert_eq("0.1.10" in result_ver.output, True))
 
 result_help = cli_runner.invoke(cli, ["--help"])
 for cmd in ["scan", "analyze", "export", "monitor", "bluetooth", "cellular", "isolation", "gui", "info", "audit"]:

@@ -1,6 +1,6 @@
 # HoneySnatch Threat Model
 
-**Version:** 0.1.9
+**Version:** 0.1.10
 **Status:** Trusted-process boundary declared (TB-01, v0.1.5 follow-up review)
 **Companion:** `SECURITY.md`
 
@@ -180,6 +180,11 @@ code should either:
 
 ## Change log
 
+- **v0.1.10** — CI-config relaxation: dropped style-modernization
+  ruff packs (UP, N) that generated ~1000 cosmetic Optional->|None
+  suggestions, and added a numpy mypy override to work around numpy
+  2.x stubs using PEP 695 syntax. No content change to the boundary,
+  no application code changed.
 - **v0.1.9** — Build-system fix (`build-backend` corrected to
   `setuptools.build_meta`). No content change to the boundary; CI
   fix only, restores `pip install -e ".[dev]"` reproducibility that

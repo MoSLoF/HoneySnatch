@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "honeysnatch"
-version = "0.1.9"
+version = "0.1.10"
 description = "honeysnatch - Wireless Discovery, Assessment & Isolation Testing Suite"
 readme = "README.md"
 license = {text = "MIT"}
@@ -182,7 +182,12 @@ target-version = "py310"
 line-length    = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "DTZ"]
+# Bug-hunting rule packs only. Style-modernization packs (UP = pyupgrade,
+# N = pep8-naming) are intentionally OFF: they generate ~1000 auto-fixable
+# suggestions like `Optional[X]` -> `X | None` that are cosmetic and would
+# rewrite ~every type annotation in the codebase without changing behavior.
+# The reviewer audits code, not modernization backlogs.
+select = ["E", "F", "W", "I", "B", "A", "C4", "DTZ"]
 ignore = [
     "E501",   # line too long (handled by formatter)
     "B008",   # do not perform function calls in default arguments
@@ -196,3 +201,12 @@ python_version    = "3.10"
 warn_return_any   = true
 warn_unused_configs = true
 ignore_missing_imports = true
+
+# numpy 2.x ships stubs that use PEP 695 `type X = Y` syntax (Python 3.12+).
+# When mypy runs under python_version = "3.10" it refuses to parse those
+# stubs. Skipping follow_imports for numpy avoids the crash without
+# weakening type checking for our own code.
+[[tool.mypy.overrides]]
+module = ["numpy", "numpy.*"]
+follow_imports = "skip"
+follow_imports_for_stubs = true
